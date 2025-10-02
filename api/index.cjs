@@ -69,9 +69,16 @@ try {
 
 const db = admin.firestore();
 
-// CORS configuration - More permissive for Vercel
+// CORS configuration - Allow specific origins
 const corsOptions = {
-    origin: true, // Allow all origins for now
+    origin: [
+        'https://transportifyy.netlify.app',
+        'https://transportify-2mf215b8a-swankys-projects-4b0bf2b3.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5173'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'Accept'],
@@ -296,15 +303,24 @@ app.post('/admin/api/shipments', requireAuth, async (req, res) => {
 // Public tracking lookup
 app.get('/track/:trackingID', async (req, res) => {
     try {
+        console.log('=== TRACKING REQUEST ===');
+        console.log('Tracking ID:', req.params.trackingID);
+        console.log('Origin:', req.headers.origin);
+        console.log('User-Agent:', req.headers['user-agent']);
+        
         const { trackingID } = req.params;
         const snap = await db.collection('shipments').where('trackingID', '==', trackingID).limit(1).get();
         
+        console.log('Firestore query result:', snap.empty ? 'No results' : 'Found shipment');
+        
         if (snap.empty) {
+            console.log('Tracking ID not found:', trackingID);
             return res.status(404).json({ success: false, message: 'Tracking ID not found' });
         }
         
         const doc = snap.docs[0];
         const data = doc.data();
+        console.log('Shipment found:', data.trackingID);
 
         const toISO = (ts) => {
             try {

@@ -18,6 +18,7 @@ const requireFromRoot = (id) => {
 const express = requireFromRoot('express');
 const session = requireFromRoot('express-session');
 const cors = requireFromRoot('cors');
+const jwt = requireFromRoot('jsonwebtoken');
 const admin = requireFromRoot('firebase-admin');
 const nodemailer = requireFromRoot('nodemailer');
 const { MailerSend, EmailParams, Sender, Recipient } = requireFromRoot('mailersend');
@@ -431,14 +432,21 @@ const getShipmentEmailHTML = (shipment, trackingID, trackUrl, isReceiver) => {
 </html>`;
 };
 
-// Authentication middleware
+// Authentication middleware - JWT-based for serverless
 const requireAuth = (req, res, next) => {
-    console.log('Auth check - Session:', req.session);
-    console.log('Auth check - Authenticated:', req.session?.authenticated);
-    if (req.session && req.session.authenticated) {
-        return next();
-    } else {
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+    
+    if (!token) {
         return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, config.SESSION_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        console.log('JWT verification failed:', error.message);
+        return res.status(401).json({ error: 'Invalid token' });
     }
 };
 
@@ -450,21 +458,33 @@ app.post('/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         console.log('Login attempt - Username:', username);
-        console.log('Login attempt - Session before:', req.session);
         
         // Simple authentication (in production, use proper user management)
         if (username === config.ADMIN_CREDENTIALS.username && 
             password === config.ADMIN_CREDENTIALS.password) {
             
-            req.session.authenticated = true;
-            req.session.username = username;
+            // Create JWT token
+            const token = jwt.sign(
+                { username, authenticated: true },
+                config.SESSION_SECRET,
+                { expiresIn: '24h' }
+            );
             
-            console.log('Login success - Session after:', req.session);
+            console.log('Login success - Token created');
+            
+            // Set token as cookie and return in response
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: false, // Set to true in production with HTTPS
+                sameSite: 'lax',
+                maxAge: 24 * 60 * 60 * 1000 // 24 hours
+            });
             
             res.json({ 
                 success: true, 
                 message: 'Login successful',
-                user: { username }
+                user: { username },
+                token: token
             });
         } else {
             console.log('Login failed - Invalid credentials');
@@ -483,27 +503,27 @@ app.post('/admin/login', async (req, res) => {
 });
 
 app.post('/admin/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Logout failed' 
-            });
-        }
-        res.json({ 
-            success: true, 
-            message: 'Logout successful' 
-        });
+    res.clearCookie('token');
+    res.json({ 
+        success: true, 
+        message: 'Logout successful' 
     });
 });
 
 app.get('/admin/check-auth', (req, res) => {
-    if (req.session && req.session.authenticated) {
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+    
+    if (!token) {
+        return res.json({ authenticated: false });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, config.SESSION_SECRET);
         res.json({ 
             authenticated: true, 
-            user: { username: req.session.username }
+            user: { username: decoded.username }
         });
-    } else {
+    } catch (error) {
         res.json({ authenticated: false });
     }
 });
@@ -864,8 +884,15 @@ app.post('/admin/test-email', requireAuth, async (req, res) => {
 
 // Redirect root admin to login
 app.get('/admin', (req, res) => {
-    if (req.session && req.session.authenticated) {
-        res.redirect('/admin/dashboard');
+    const token = req.cookies?.token;
+    
+    if (token) {
+        try {
+            jwt.verify(token, config.SESSION_SECRET);
+            res.redirect('/admin/dashboard');
+        } catch (error) {
+            res.redirect('/admin/login');
+        }
     } else {
         res.redirect('/admin/login');
     }

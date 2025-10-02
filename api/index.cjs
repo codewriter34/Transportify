@@ -111,7 +111,8 @@ module.exports = async (req, res) => {
                     message: 'Firebase not available',
                     env: {
                         FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Not set',
-                        FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Not set'
+                        FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Not set',
+                        FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ? 'Set' : 'Not set'
                     }
                 });
             }
@@ -121,8 +122,28 @@ module.exports = async (req, res) => {
                 message: 'Firebase is working',
                 env: {
                     FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Not set',
-                    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Not set'
+                    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Not set',
+                    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ? 'Set' : 'Not set'
                 }
+            });
+        }
+        
+        // Environment variables debug endpoint
+        if (url === '/env-debug') {
+            return res.json({
+                success: true,
+                message: 'Environment variables debug',
+                env: {
+                    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Not set',
+                    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Not set',
+                    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ? 'Set' : 'Not set',
+                    FIREBASE_PRIVATE_KEY_ID: process.env.FIREBASE_PRIVATE_KEY_ID ? 'Set' : 'Not set',
+                    FIREBASE_CLIENT_ID: process.env.FIREBASE_CLIENT_ID ? 'Set' : 'Not set',
+                    NODE_ENV: process.env.NODE_ENV
+                },
+                // Show first few characters of private key to verify format
+                privateKeyPreview: process.env.FIREBASE_PRIVATE_KEY ? 
+                    process.env.FIREBASE_PRIVATE_KEY.substring(0, 20) + '...' : 'Not set'
             });
         }
         

@@ -88,15 +88,26 @@ function formatPlace(p?: { city?: string; state?: string; country?: string } | n
   return [p.city, p.state, p.country].filter(Boolean).join(', ');
 }
 
-function statusEmoji(status?: string): string {
+function getStatusColor(status?: string): string {
   const s = (status || '').toLowerCase();
-  if (s === 'delivered') return '✅';
-  if (s === 'in-transit' || s === 'in transit') return '🕒';
+  if (s === 'delivered') return 'text-green-600 bg-green-50 border-green-200';
+  if (s === 'in-transit' || s === 'in transit') return 'text-blue-600 bg-blue-50 border-blue-200';
+  if (s === 'out-for-delivery' || s === 'out for delivery') return 'text-purple-600 bg-purple-50 border-purple-200';
+  if (s === 'processing') return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+  if (s === 'pending') return 'text-gray-600 bg-gray-50 border-gray-200';
+  if (s === 'cancelled') return 'text-red-600 bg-red-50 border-red-200';
+  return 'text-gray-600 bg-gray-50 border-gray-200';
+}
+
+function getStatusIcon(status?: string): string {
+  const s = (status || '').toLowerCase();
+  if (s === 'delivered') return '✓';
+  if (s === 'in-transit' || s === 'in transit') return '→';
   if (s === 'out-for-delivery' || s === 'out for delivery') return '📦';
-  if (s === 'processing') return '⚙️';
+  if (s === 'processing') return '⚙';
   if (s === 'pending') return '⏳';
-  if (s === 'cancelled') return '❌';
-  return 'ℹ️';
+  if (s === 'cancelled') return '✕';
+  return 'ℹ';
 }
 
 export default function TrackPage() {
@@ -196,158 +207,238 @@ export default function TrackPage() {
       <Navbar />
       <div className="pt-24"></div>
 
-      {/* Light Hero with tracking form */}
-      <section className="bg-gray-50 py-12">
+      {/* Clean Hero with tracking form */}
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-16">
         <div className="max-w-4xl mx-auto px-6">
-          <h1 className="text-3xl font-bold text-[#1E3A8A] mb-4">Track Your Shipment</h1>
-          <p className="text-gray-600 mb-6">Enter your tracking number to view real-time status and history.</p>
-          <div className="bg-white rounded-lg shadow p-4 flex gap-3">
-            <input
-              value={trackingID}
-              onChange={(e) => setTrackingID(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleTrack(); }}
-              placeholder="Enter tracking number (e.g., TRANS...)"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={handleTrack}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md"
-              disabled={loading}
-            >
-              {loading ? 'Tracking...' : 'Track'}
-            </button>
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Track Your Shipment</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Enter your tracking number to view real-time status, location updates, and delivery information.
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl mx-auto">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label htmlFor="tracking-input" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tracking Number
+                </label>
+                <input
+                  id="tracking-input"
+                  value={trackingID}
+                  onChange={(e) => setTrackingID(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleTrack(); }}
+                  placeholder="Enter your tracking number"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={handleTrack}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading || !trackingID.trim()}
+                >
+                  {loading ? 'Tracking...' : 'Track Shipment'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {error && (
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded p-4 mb-6">
-            {error}
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-6 text-center">
+            <div className="text-lg font-medium mb-2">Unable to Track Shipment</div>
+            <div className="text-sm">{error}</div>
           </div>
         </div>
       )}
 
       {result && (
-        <div className="bg-white rounded-lg shadow p-6 max-w-6xl mx-auto px-6">
-          {/* Header with Logo and Barcode */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <img
-                src="/src/assets/transporify%20logo/logo.png"
-                alt="Company Logo"
-                className="w-10 h-10"
-                onError={(e) => {
-                  const img = e.currentTarget as HTMLImageElement;
-                  if (img.src.includes('logo.png')) {
-                    img.src = '/src/assets/transporify%20logo/logo.svg';
-                  } else if (img.src.includes('logo.svg')) {
-                    img.src = '/src/assets/transporify%20logo/logo.jpg';
-                  } else {
-                    img.style.display = 'none';
-                  }
-                }}
-              />
-              <div>
-                <div className="text-xl font-semibold text-[#1E3A8A]">Transportify</div>
-                <div className="text-sm text-gray-500">Shipment Tracking</div>
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Header with Status */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                  <img
+                    src="/src/assets/transporify%20logo/logo.png"
+                    alt="Transportify"
+                    className="w-10 h-10"
+                    onError={(e) => {
+                      const img = e.currentTarget as HTMLImageElement;
+                      if (img.src.includes('logo.png')) {
+                        img.src = '/src/assets/transporify%20logo/logo.svg';
+                      } else if (img.src.includes('logo.svg')) {
+                        img.src = '/src/assets/transporify%20logo/logo.jpg';
+                      } else {
+                        img.style.display = 'none';
+                      }
+                    }}
+                  />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Shipment Details</h2>
+                  <p className="text-gray-600">Tracking ID: {result.trackingID}</p>
+                </div>
               </div>
-            </div>
-            <div className="text-center">
-              <svg ref={barcodeRef} className="mx-auto h-20"></svg>
-              <div className="mt-2 text-sm tracking-wider text-gray-700">{result.trackingID}</div>
-            </div>
-          </div>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-[#1E3A8A]">Shipment Details</h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Basic Info */}
-            <div>
-              <h3 className="text-lg font-semibold text-[#1E3A8A] mb-4">Basic Information</h3>
-              <div className="space-y-3">
-                <div>
-                  <div className="text-gray-600 text-sm font-semibold">Tracking ID</div>
-                  <div className="text-gray-900">{result.trackingID}</div>
+              
+              <div className="flex flex-col items-center lg:items-end">
+                <div className={`inline-flex items-center px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(result.status)}`}>
+                  <span className="mr-2">{getStatusIcon(result.status)}</span>
+                  {result.status || 'Unknown'}
                 </div>
-                <div>
-                  <div className="text-gray-600 text-sm font-semibold">Status</div>
-                  <div className="text-gray-900">{statusEmoji(result.status)} {result.status || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-gray-600 text-sm font-semibold">Estimated Delivery</div>
-                  <div className="text-gray-900">{formatDate(result.estimatedDeliveryDate)}</div>
-                </div>
-                <div>
-                  <div className="text-gray-600 text-sm font-semibold">Last Updated</div>
-                  <div className="text-gray-900">{formatDate(result.lastUpdated)}</div>
+                <div className="mt-2 text-sm text-gray-500">
+                  Last updated: {formatDate(result.lastUpdated)}
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Sender & Receiver */}
-            <div>
-              <h3 className="text-lg font-semibold text-[#1E3A8A] mb-4">👥 Sender & Receiver</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Route Information */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Route Information</h3>
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div>
+                    <div className="text-sm text-gray-500">Origin</div>
+                    <div className="font-medium text-gray-900">{formatPlace(result.origin || undefined)}</div>
+                  </div>
+                </div>
+                <div className="ml-1.5 border-l-2 border-gray-200 h-8"></div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <div>
+                    <div className="text-sm text-gray-500">Destination</div>
+                    <div className="font-medium text-gray-900">{formatPlace(result.destination || undefined)}</div>
+                  </div>
+                </div>
+                {result.currentLocation?.name && (
+                  <>
+                    <div className="ml-1.5 border-l-2 border-gray-200 h-8"></div>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <div>
+                        <div className="text-sm text-gray-500">Current Location</div>
+                        <div className="font-medium text-gray-900">{result.currentLocation.name}</div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Package Details */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Package Details</h3>
               <div className="space-y-4">
                 <div>
-                  <div className="text-gray-600 text-sm font-semibold">👤 Sender</div>
-                  <div className="text-gray-900">
-                    {result.sender?.name || '—'}<br/>
-                    {result.sender?.email && <span className="text-sm text-gray-600">{result.sender.email}</span>}<br/>
-                    {result.sender?.phone && <span className="text-sm text-gray-600">{result.sender.phone}</span>}
+                  <div className="text-sm text-gray-500">Service Type</div>
+                  <div className="font-medium text-gray-900 capitalize">{result.package?.serviceType || 'Standard'}</div>
+                </div>
+                {result.package?.weight && (
+                  <div>
+                    <div className="text-sm text-gray-500">Weight</div>
+                    <div className="font-medium text-gray-900">{result.package.weight} kg</div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-gray-600 text-sm font-semibold">🎯 Receiver</div>
-                  <div className="text-gray-900">
-                    {result.receiver?.name || '—'}<br/>
-                    {result.receiver?.email && <span className="text-sm text-gray-600">{result.receiver.email}</span>}<br/>
-                    {result.receiver?.phone && <span className="text-sm text-gray-600">{result.receiver.phone}</span>}
+                )}
+                {result.package?.dimensions && (
+                  <div>
+                    <div className="text-sm text-gray-500">Dimensions</div>
+                    <div className="font-medium text-gray-900">{result.package.dimensions}</div>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Package & Location */}
-            <div>
-              <h3 className="text-lg font-semibold text-[#1E3A8A] mb-4">📦 Package & 📍 Location</h3>
-              <div className="space-y-3">
-                <div>
-                  <div className="text-gray-600 text-sm font-semibold">📦 Package</div>
-                  <div className="text-gray-900">
-                    {result.package?.description || '—'}<br/>
-                    {result.package?.weight && <span className="text-sm text-gray-600">Weight: {result.package.weight}kg</span>}<br/>
-                    {result.package?.dimensions && <span className="text-sm text-gray-600">Size: {result.package.dimensions}</span>}<br/>
-                    {result.package?.serviceType && <span className="text-sm text-gray-600">Service: {result.package.serviceType}</span>}
+                )}
+                {result.estimatedDeliveryDate && (
+                  <div>
+                    <div className="text-sm text-gray-500">Estimated Delivery</div>
+                    <div className="font-medium text-gray-900">{formatDate(result.estimatedDeliveryDate)}</div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-gray-600 text-sm font-semibold">📍 Current Location</div>
-                  <div className="text-gray-900">{result.currentLocation?.name || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-gray-600 text-sm font-semibold">🧭 Route</div>
-                  <div className="text-gray-900">
-                    🟢 From: {formatPlace(result.origin || undefined)}<br/>
-                    🏁 To: {formatPlace(result.destination || undefined)}
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold text-[#1E3A8A] mb-4">Tracking History</h3>
-            <div className="space-y-2">
-              {(result.trackingHistory || []).map((h, idx) => (
-                <div key={idx} className="flex items-center space-x-4 p-3 bg-gray-50 rounded">
-                  <div className="text-sm text-gray-600 w-32">🕒 {formatDate(h.timestamp)}</div>
-                  <div className="text-sm font-medium w-24">{statusEmoji(h.status)} {h.status || '—'}</div>
-                  <div className="text-sm text-gray-700 flex-1">{h.location || '—'}</div>
-                  {h.notes && <div className="text-xs text-gray-500">{h.notes}</div>}
+          {/* Contact Information */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Sender Information</h3>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-sm text-gray-500">Name</div>
+                  <div className="font-medium text-gray-900">{result.sender?.name || 'Not provided'}</div>
                 </div>
-              ))}
+                {result.sender?.email && (
+                  <div>
+                    <div className="text-sm text-gray-500">Email</div>
+                    <div className="font-medium text-gray-900">{result.sender.email}</div>
+                  </div>
+                )}
+                {result.sender?.phone && (
+                  <div>
+                    <div className="text-sm text-gray-500">Phone</div>
+                    <div className="font-medium text-gray-900">{result.sender.phone}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Receiver Information</h3>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-sm text-gray-500">Name</div>
+                  <div className="font-medium text-gray-900">{result.receiver?.name || 'Not provided'}</div>
+                </div>
+                {result.receiver?.email && (
+                  <div>
+                    <div className="text-sm text-gray-500">Email</div>
+                    <div className="font-medium text-gray-900">{result.receiver.email}</div>
+                  </div>
+                )}
+                {result.receiver?.phone && (
+                  <div>
+                    <div className="text-sm text-gray-500">Phone</div>
+                    <div className="font-medium text-gray-900">{result.receiver.phone}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Tracking History */}
+          <div className="mt-8">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Tracking History</h3>
+              <div className="space-y-6">
+                {(result.trackingHistory || []).map((h, idx) => (
+                  <div key={idx} className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className={`w-3 h-3 rounded-full ${idx === 0 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                      {idx < (result.trackingHistory?.length || 0) - 1 && (
+                        <div className="ml-1.5 w-0.5 h-8 bg-gray-200"></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(h.status)}`}>
+                          <span className="mr-1">{getStatusIcon(h.status)}</span>
+                          {h.status || 'Update'}
+                        </div>
+                        <div className="text-sm text-gray-500">{formatDate(h.timestamp)}</div>
+                      </div>
+                      <div className="mt-2">
+                        <div className="text-gray-900 font-medium">{h.location || 'Location not specified'}</div>
+                        {h.notes && (
+                          <div className="text-sm text-gray-600 mt-1">{h.notes}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -361,5 +452,7 @@ export default function TrackPage() {
     </div>
   );
 }
+
+
 
 

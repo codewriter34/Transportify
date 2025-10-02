@@ -7,6 +7,7 @@ type TrackingHistoryEntry = {
   status?: string;
   location?: string;
   timestamp?: any;
+  notes?: string;
 };
 
 type Coordinates = { lat?: number; lng?: number } | null;
@@ -103,12 +104,12 @@ export default function TrackPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ShipmentTracking | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({
-    status: '',
-    location: '',
-    notes: ''
-  });
+  // const [showEditModal, setShowEditModal] = useState(false);
+  // const [editForm, setEditForm] = useState({
+  //   status: '',
+  //   location: '',
+  //   notes: ''
+  // });
 
   const barcodeRef = useRef<SVGSVGElement | null>(null);
 
@@ -159,35 +160,35 @@ export default function TrackPage() {
     }
   }
 
-  async function handleUpdateTracking() {
-    if (!result?.trackingID) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`http://localhost:3009/track/${result.trackingID}/location`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lat: 0, // Will be updated by geocoding
-          lng: 0,
-          locationName: editForm.location,
-          status: editForm.status,
-          notes: editForm.notes
-        })
-      });
+  // async function handleUpdateTracking() {
+  //   if (!result?.trackingID) return;
+  //   setLoading(true);
+  //   try {
+  //     const res = await fetch(`http://localhost:3009/track/${result.trackingID}/location`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         lat: 0, // Will be updated by geocoding
+  //         lng: 0,
+  //         locationName: editForm.location,
+  //         status: editForm.status,
+  //         notes: editForm.notes
+  //       })
+  //     });
       
-      if (res.ok) {
-        await handleTrack(); // Refresh data
-        setShowEditModal(false);
-        setEditForm({ status: '', location: '', notes: '' });
-      } else {
-        setError('Failed to update tracking');
-      }
-    } catch (e) {
-      setError('Network error');
-    } finally {
-      setLoading(false);
-    }
-  }
+  //     if (res.ok) {
+  //       await handleTrack(); // Refresh data
+  //       setShowEditModal(false);
+  //       setEditForm({ status: '', location: '', notes: '' });
+  //     } else {
+  //       setError('Failed to update tracking');
+  //     }
+  //   } catch (e) {
+  //     setError('Network error');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
 
   return (
     <div className="min-h-screen flex flex-col">

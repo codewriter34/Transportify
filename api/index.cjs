@@ -1,4 +1,5 @@
 // Vercel Serverless Function for Transportify Admin API
+console.log('Starting Transportify API...');
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -347,8 +348,11 @@ app.get('/', (req, res) => {
         message: 'Transportify API Server',
         status: 'running',
         timestamp: new Date().toISOString(),
+        cors: 'enabled',
         endpoints: {
             health: '/health',
+            test: '/test',
+            corsTest: '/cors-test',
             admin: {
                 login: '/admin/login',
                 logout: '/admin/logout',
@@ -359,6 +363,15 @@ app.get('/', (req, res) => {
                 track: '/track/:trackingID'
             }
         }
+    });
+});
+
+// Simple test route to verify CORS
+app.get('/simple-test', (req, res) => {
+    res.json({ 
+        message: 'Simple test successful',
+        cors: 'working',
+        timestamp: new Date().toISOString()
     });
 });
 
@@ -793,30 +806,81 @@ app.get('/cors-test', (req, res) => {
 <html>
 <head>
     <title>CORS Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
 </head>
 <body>
-    <h1>CORS Test Page</h1>
-    <button onclick="testCORS()">Test CORS</button>
-    <div id="result"></div>
+    <h1>🚚 Transportify CORS Test Page</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Simple GET Request</h3>
+        <button onclick="testSimple()">Test Simple GET</button>
+        <div id="simple-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: POST Request</h3>
+        <button onclick="testPOST()">Test POST</button>
+        <div id="post-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: Login Request</h3>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result"></div>
+    </div>
     
     <script>
-        async function testCORS() {
-            const resultDiv = document.getElementById('result');
+        async function testSimple() {
+            const resultDiv = document.getElementById('simple-result');
+            try {
+                const response = await fetch('/simple-test');
+                const data = await response.json();
+                resultDiv.innerHTML = '<p class="success">✅ Simple GET Test Successful!</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="error">❌ Simple GET Test Failed: ' + error.message + '</p>';
+            }
+        }
+        
+        async function testPOST() {
+            const resultDiv = document.getElementById('post-result');
             try {
                 const response = await fetch('/test', {
                     method: 'POST',
-                    mode: 'cors',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ test: 'data' })
                 });
-                
                 const data = await response.json();
-                resultDiv.innerHTML = '<p style="color: green;">CORS Test Successful!</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                resultDiv.innerHTML = '<p class="success">✅ POST Test Successful!</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
             } catch (error) {
-                resultDiv.innerHTML = '<p style="color: red;">CORS Test Failed: ' + error.message + '</p>';
+                resultDiv.innerHTML = '<p class="error">❌ POST Test Failed: ' + error.message + '</p>';
+            }
+        }
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: 'Transportify-admin', 
+                        password: '12345678$$' 
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    resultDiv.innerHTML = '<p class="success">✅ Login Test Successful!</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    resultDiv.innerHTML = '<p class="error">❌ Login Test Failed: ' + data.message + '</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="error">❌ Login Test Failed: ' + error.message + '</p>';
             }
         }
     </script>
@@ -840,6 +904,15 @@ app.use((req, res) => {
         success: false,
         message: 'Route not found'
     });
+});
+
+// Debug logging
+console.log('API loaded successfully');
+console.log('Available routes:');
+app._router.stack.forEach(function(r){
+  if (r.route && r.route.path){
+    console.log('Route:', r.route.path, 'Methods:', Object.keys(r.route.methods));
+  }
 });
 
 // Export for Vercel

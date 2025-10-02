@@ -323,6 +323,36 @@ app.get('/track/:trackingID', async (req, res) => {
     }
 });
 
+// Root route
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'Transportify API Server',
+        status: 'running',
+        timestamp: new Date().toISOString(),
+        endpoints: {
+            health: '/health',
+            admin: {
+                login: '/admin/login',
+                logout: '/admin/logout',
+                checkAuth: '/admin/check-auth',
+                shipments: '/admin/api/shipments'
+            },
+            public: {
+                track: '/track/:trackingID'
+            }
+        }
+    });
+});
+
+// Favicon handler
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end(); // No content
+});
+
+app.get('/favicon.png', (req, res) => {
+    res.status(204).end(); // No content
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });

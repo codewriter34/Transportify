@@ -556,18 +556,24 @@ app.post('/admin/logout', (req, res) => {
 app.get('/admin/check-auth', (req, res) => {
     const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
     
+    console.log('=== CHECK AUTH DEBUG ===');
+    console.log('Headers:', req.headers);
+    console.log('Cookies:', req.cookies);
+    console.log('Token:', token ? 'Present' : 'Missing');
+    
     if (!token) {
-        return res.json({ authenticated: false });
+        return res.json({ authenticated: false, debug: 'No token found' });
     }
     
     try {
         const decoded = jwt.verify(token, config.SESSION_SECRET);
         res.json({ 
             authenticated: true, 
-            user: { username: decoded.username }
+            user: { username: decoded.username },
+            debug: 'Token verified successfully'
         });
     } catch (error) {
-        res.json({ authenticated: false });
+        res.json({ authenticated: false, debug: `Token verification failed: ${error.message}` });
     }
 });
 

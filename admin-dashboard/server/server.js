@@ -139,7 +139,9 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173'
+    'http://127.0.0.1:5173',
+    'https://transportifyy.netlify.app',
+    'https://transportify-2mf215b8a-swankys-projects-4b0bf2b3.vercel.app'
 ];
 
 const corsGeneral = cors({
@@ -198,9 +200,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: config.NODE_ENV === 'production',
+        secure: false, // Set to false for Vercel
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'lax' // Allow cross-site cookies
     }
 }));
 

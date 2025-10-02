@@ -878,9 +878,10 @@ app.use((req, res) => {
 // Start server
 const PORT = config.PORT;
 app.listen(PORT, () => {
-    console.log(`🚚 Transportify Admin Server running on port ${PORT}`);
-    console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
-    console.log(`🔐 Login: http://localhost:${PORT}/admin/login`);
+console.log(`🚚 Transportify Admin Server running on port ${PORT}`);
+console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
+console.log(`🔐 Login: http://localhost:${PORT}/admin/login`);
+console.log(`📧 Email notifications: MailerSend enabled`);
 });
 
 module.exports = app;

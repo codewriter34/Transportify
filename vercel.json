@@ -3,27 +3,16 @@
   "builds": [
     {
       "src": "admin-dashboard/server/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["admin-dashboard/server/**"]
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "admin-dashboard/server/server.js",
-      "headers": {
-        "Cache-Control": "no-cache"
-      }
+      "dest": "admin-dashboard/server/server.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "admin-dashboard/server/server.js": {
-      "maxDuration": 30
-    }
   }
 }

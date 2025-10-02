@@ -1,13 +1,13 @@
 {
   "functions": {
     "api/basic.cjs": {
-      "runtime": "@vercel/node@3.0.7"
+      "runtime": "nodejs18.x"
     },
     "api/hello.cjs": {
-      "runtime": "@vercel/node@3.0.7"
+      "runtime": "nodejs18.x"
     },
     "api/index.cjs": {
-      "runtime": "@vercel/node@3.0.7"
+      "runtime": "nodejs18.x"
     }
   },
   "routes": [

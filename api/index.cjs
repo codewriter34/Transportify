@@ -68,47 +68,46 @@ try {
 
 const db = admin.firestore();
 
-// CORS configuration
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173',
-    'https://transportifyy.netlify.app',
-    'https://transportify-2mf215b8a-swankys-projects-4b0bf2b3.vercel.app'
-];
-
+// CORS configuration - More permissive for Vercel
 const corsOptions = {
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(null, false);
-    },
+    origin: true, // Allow all origins for now
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-    exposedHeaders: ['Set-Cookie']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+    exposedHeaders: ['Set-Cookie'],
+    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
 
-// Middleware
+// Apply CORS to all routes
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Authentication middleware
 const requireAuth = (req, res, next) => {
+    console.log('=== AUTH CHECK ===');
+    console.log('Headers:', req.headers);
+    console.log('Cookies:', req.cookies);
+    
     const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+    console.log('Token found:', token ? 'Yes' : 'No');
     
     if (!token) {
+        console.log('No token - returning 401');
         return res.status(401).json({ error: 'Authentication required' });
     }
     
     try {
         const decoded = jwt.verify(token, config.SESSION_SECRET);
+        console.log('Token verified successfully:', decoded);
         req.user = decoded;
         next();
     } catch (error) {
+        console.log('Token verification failed:', error.message);
         return res.status(401).json({ error: 'Invalid token' });
     }
 };
@@ -151,6 +150,7 @@ const saveShipment = async (shipmentData) => {
 // Authentication routes
 app.post('/admin/login', async (req, res) => {
     try {
+        console.log('Login attempt:', req.body);
         const { username, password } = req.body;
         
         if (username === config.ADMIN_CREDENTIALS.username && 
@@ -161,6 +161,14 @@ app.post('/admin/login', async (req, res) => {
                 config.SESSION_SECRET,
                 { expiresIn: '24h' }
             );
+            
+            console.log('Login successful for user:', username);
+            
+            // Set CORS headers explicitly
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Credentials', 'true');
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
             
             res.cookie('token', token, {
                 httpOnly: false,
@@ -176,6 +184,7 @@ app.post('/admin/login', async (req, res) => {
                 token: token
             });
         } else {
+            console.log('Login failed - invalid credentials');
             res.status(401).json({ 
                 success: false, 
                 message: 'Invalid credentials' 
@@ -250,7 +259,7 @@ app.post('/admin/api/shipments', requireAuth, async (req, res) => {
             receiver: shipmentData.receiver || {},
             package: shipmentData.package || {},
             trackingHistory: [{
-                status: 'pending',
+            status: 'pending',
                 location: shipmentData.origin?.city || 'Origin',
                 timestamp: new Date(),
                 coordinates: shipmentData.origin?.coordinates || null,
@@ -541,7 +550,7 @@ app.get('/admin/dashboard', (req, res) => {
                     errorDiv.textContent = data.message || 'Login failed';
                     errorDiv.style.display = 'block';
                 }
-            } catch (error) {
+    } catch (error) {
                 errorDiv.textContent = 'Network error: ' + error.message;
                 errorDiv.style.display = 'block';
             }
@@ -704,7 +713,7 @@ app.get('/admin/login', (req, res) => {
                     setTimeout(() => {
                         window.location.href = '/admin/dashboard';
                     }, 1000);
-                } else {
+    } else {
                     errorDiv.textContent = data.message || 'Login failed';
                     errorDiv.style.display = 'block';
                 }
@@ -722,6 +731,24 @@ app.get('/admin/login', (req, res) => {
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Test endpoint for CORS debugging
+app.get('/test', (req, res) => {
+    res.json({ 
+        message: 'CORS test successful',
+        timestamp: new Date().toISOString(),
+        headers: req.headers
+    });
+});
+
+// Test POST endpoint for CORS debugging
+app.post('/test', (req, res) => {
+    res.json({ 
+        message: 'POST CORS test successful',
+        timestamp: new Date().toISOString(),
+        body: req.body
+    });
 });
 
 // Error handling middleware

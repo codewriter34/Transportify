@@ -2,17 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.cjs",
+      "src": "admin-dashboard/server/server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/index.cjs"
+      "dest": "admin-dashboard/server/server.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "installCommand": "npm install && cd admin-dashboard/server && npm install"
 }

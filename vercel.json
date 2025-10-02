@@ -2,17 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "admin-dashboard/server/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["admin-dashboard/server/**"]
-      }
+      "src": "api/index.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "admin-dashboard/server/server.js"
+      "dest": "/api/index.js"
     }
   ],
   "env": {

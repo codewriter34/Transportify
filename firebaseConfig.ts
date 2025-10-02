@@ -5,12 +5,12 @@ import { initializeApp } from "firebase/app";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBdUqukFPi_bT5u2N8nEG4wEJyQbcCimrU",
-  authDomain: "transportify-d94c3.firebaseapp.com",
-  projectId: "transportify-d94c3",
-  storageBucket: "transportify-d94c3.firebasestorage.app",
-  messagingSenderId: "58749604139",
-  appId: "1:58749604139:web:a5641399406f9a9d45756e"
+  apiKey: process.env.VITE_FIREBASE_API_KEY || "your-api-key-here",
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "transportify-d94c3.firebaseapp.com",
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID || "transportify-d94c3",
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "transportify-d94c3.firebasestorage.app",
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "58749604139",
+  appId: process.env.VITE_FIREBASE_APP_ID || "1:58749604139:web:a5641399406f9a9d45756e"
 };
 
 // Initialize Firebase

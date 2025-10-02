@@ -2,6 +2,11 @@
 transportify-d94c3-firebase-adminsdk-fbsvc-b56fc3f2f0.json
 *-firebase-adminsdk-*.json
 
+# Firebase config with hardcoded keys (use environment variables instead)
+firebaseConfig.ts
+firebase-config.js
+firebase-config.ts
+
 # Environment variables
 .env
 .env.local

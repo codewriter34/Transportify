@@ -12,10 +12,18 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "admin-dashboard/server/server.js"
+      "dest": "admin-dashboard/server/server.js",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
     }
   ],
   "env": {
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "admin-dashboard/server/server.js": {
+      "maxDuration": 30
+    }
   }
 }

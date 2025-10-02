@@ -203,8 +203,10 @@ app.use(session({
         secure: false, // Set to false for Vercel
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'lax' // Allow cross-site cookies
-    }
+        sameSite: 'lax', // Allow cross-site cookies
+        domain: undefined // Don't set domain for Vercel
+    },
+    name: 'connect.sid' // Explicitly set session name
 }));
 
 // Firestore database integration
@@ -431,6 +433,8 @@ const getShipmentEmailHTML = (shipment, trackingID, trackUrl, isReceiver) => {
 
 // Authentication middleware
 const requireAuth = (req, res, next) => {
+    console.log('Auth check - Session:', req.session);
+    console.log('Auth check - Authenticated:', req.session?.authenticated);
     if (req.session && req.session.authenticated) {
         return next();
     } else {
@@ -445,6 +449,8 @@ app.use('/admin', express.static(path.join(__dirname, '../public')));
 app.post('/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+        console.log('Login attempt - Username:', username);
+        console.log('Login attempt - Session before:', req.session);
         
         // Simple authentication (in production, use proper user management)
         if (username === config.ADMIN_CREDENTIALS.username && 
@@ -453,12 +459,15 @@ app.post('/admin/login', async (req, res) => {
             req.session.authenticated = true;
             req.session.username = username;
             
+            console.log('Login success - Session after:', req.session);
+            
             res.json({ 
                 success: true, 
                 message: 'Login successful',
                 user: { username }
             });
         } else {
+            console.log('Login failed - Invalid credentials');
             res.status(401).json({ 
                 success: false, 
                 message: 'Invalid credentials' 

@@ -2,11 +2,19 @@
   "version": 2,
   "builds": [
     {
+      "src": "api/hello.cjs",
+      "use": "@vercel/node"
+    },
+    {
       "src": "api/index.cjs",
       "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/hello",
+      "dest": "/api/hello.cjs"
+    },
     {
       "src": "/(.*)",
       "dest": "/api/index.cjs"

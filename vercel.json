@@ -2,30 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/track.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/test.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/index.cjs",
+      "src": "api/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/track/(.*)",
-      "dest": "/api/track.js"
-    },
-    {
-      "src": "/test",
-      "dest": "/api/test.js"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/api/index.cjs"
+      "dest": "/api/index.js"
     }
   ],
   "env": {

@@ -146,7 +146,7 @@ export default function TrackPage() {
     setError(null);
     setResult(null);
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://transportify-2mf215b8a-swankys-projects-4b0bf2b3.vercel.app';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://transportify-qrem85z84-swankys-projects-4b0bf2b3.vercel.app';
       const res = await fetch(`${apiBaseUrl}/track/${encodeURIComponent(trackingID.trim())}`);
       const data = await res.json();
       if (!res.ok || !data?.success) {

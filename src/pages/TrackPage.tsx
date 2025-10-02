@@ -147,7 +147,7 @@ export default function TrackPage() {
     setResult(null);
     try {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://transportify-qrem85z84-swankys-projects-4b0bf2b3.vercel.app';
-      const res = await fetch(`${apiBaseUrl}/track/${encodeURIComponent(trackingID.trim())}`);
+      const res = await fetch(`${apiBaseUrl.replace(/\/$/, '')}/track/${encodeURIComponent(trackingID.trim())}`);
       const data = await res.json();
       if (!res.ok || !data?.success) {
         setError(data?.message || 'Tracking ID not found');

@@ -353,6 +353,372 @@ app.get('/favicon.png', (req, res) => {
     res.status(204).end(); // No content
 });
 
+// Admin dashboard routes
+app.get('/admin/dashboard', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transportify Admin Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            margin: 0;
+        }
+        .status {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .endpoints {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .endpoints h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .endpoint {
+            margin: 5px 0;
+            font-family: monospace;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            border-left: 3px solid #007bff;
+        }
+        .login-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚚 Transportify Admin Dashboard</h1>
+        </div>
+        
+        <div class="status">
+            ✅ API Server is running and connected to Firebase
+        </div>
+        
+        <div class="login-form">
+            <h3>Admin Login</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <div id="error" class="error"></div>
+            <div id="success" class="success"></div>
+        </div>
+        
+        <div class="endpoints">
+            <h3>Available API Endpoints:</h3>
+            <div class="endpoint">GET /health - Health check</div>
+            <div class="endpoint">POST /admin/login - Admin login</div>
+            <div class="endpoint">POST /admin/logout - Admin logout</div>
+            <div class="endpoint">GET /admin/check-auth - Check authentication</div>
+            <div class="endpoint">GET /admin/api/shipments - Get shipments (requires auth)</div>
+            <div class="endpoint">POST /admin/api/shipments - Create shipment (requires auth)</div>
+            <div class="endpoint">GET /track/:trackingID - Public tracking</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            const successDiv = document.getElementById('success');
+            
+            // Hide previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successDiv.textContent = 'Login successful! Token: ' + data.token.substring(0, 20) + '...';
+                    successDiv.style.display = 'block';
+                    
+                    // Store token for future requests
+                    localStorage.setItem('adminToken', data.token);
+                    
+                    // Redirect to a simple dashboard
+                    setTimeout(() => {
+                        window.location.href = '/admin/dashboard?authenticated=true';
+                    }, 1000);
+                } else {
+                    errorDiv.textContent = data.message || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+        
+        // Check if already authenticated
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('authenticated') === 'true') {
+            document.querySelector('.login-form').style.display = 'none';
+            document.querySelector('.status').innerHTML = '✅ Logged in successfully! <a href="/admin/api/shipments">View Shipments</a>';
+        }
+    </script>
+</body>
+</html>
+    `);
+});
+
+app.get('/admin/login', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transportify Admin Login</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            color: #333;
+            margin: 0;
+            font-size: 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🚚 Transportify</h1>
+            <p>Admin Login</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            const successDiv = document.getElementById('success');
+            
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successDiv.textContent = 'Login successful! Redirecting...';
+                    successDiv.style.display = 'block';
+                    
+                    localStorage.setItem('adminToken', data.token);
+                    
+                    setTimeout(() => {
+                        window.location.href = '/admin/dashboard';
+                    }, 1000);
+                } else {
+                    errorDiv.textContent = data.message || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+    `);
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });

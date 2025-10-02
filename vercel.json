@@ -1,15 +1,25 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.cjs",
-      "use": "@vercel/node"
+  "functions": {
+    "api/track.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/test.js": {
+      "runtime": "nodejs18.x"
     }
-  ],
+  },
   "routes": [
     {
+      "src": "/track/(.*)",
+      "dest": "/api/track.js"
+    },
+    {
+      "src": "/test",
+      "dest": "/api/test.js"
+    },
+    {
       "src": "/(.*)",
-      "dest": "api/index.cjs"
+      "dest": "/api/index.cjs"
     }
   ],
   "env": {

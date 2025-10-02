@@ -73,7 +73,7 @@ const corsOptions = {
     origin: true, // Allow all origins for now
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'Accept'],
     exposedHeaders: ['Set-Cookie'],
     optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
@@ -83,6 +83,15 @@ app.use(cors(corsOptions));
 
 // Handle preflight requests
 app.options('*', cors(corsOptions));
+
+// Additional CORS middleware for all responses
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -525,15 +534,27 @@ app.get('/admin/dashboard', (req, res) => {
             successDiv.style.display = 'none';
             
             try {
+                // Use a more compatible fetch approach
                 const response = await fetch('/admin/login', {
                     method: 'POST',
+                    mode: 'cors',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({ username, password })
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(\`HTTP error! status: \${response.status}\`);
+                }
+                
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (data.success) {
                     successDiv.textContent = 'Login successful! Token: ' + data.token.substring(0, 20) + '...';
@@ -551,6 +572,7 @@ app.get('/admin/dashboard', (req, res) => {
                     errorDiv.style.display = 'block';
                 }
     } catch (error) {
+                console.error('Login error:', error);
                 errorDiv.textContent = 'Network error: ' + error.message;
                 errorDiv.style.display = 'block';
             }
@@ -694,15 +716,27 @@ app.get('/admin/login', (req, res) => {
             successDiv.style.display = 'none';
             
             try {
+                // Use a more compatible fetch approach
                 const response = await fetch('/admin/login', {
                     method: 'POST',
+                    mode: 'cors',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({ username, password })
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(\`HTTP error! status: \${response.status}\`);
+                }
+                
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (data.success) {
                     successDiv.textContent = 'Login successful! Redirecting...';
@@ -718,6 +752,7 @@ app.get('/admin/login', (req, res) => {
                     errorDiv.style.display = 'block';
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 errorDiv.textContent = 'Network error: ' + error.message;
                 errorDiv.style.display = 'block';
             }
@@ -749,6 +784,45 @@ app.post('/test', (req, res) => {
         timestamp: new Date().toISOString(),
         body: req.body
     });
+});
+
+// Simple test page to verify CORS
+app.get('/cors-test', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test Page</h1>
+    <button onclick="testCORS()">Test CORS</button>
+    <div id="result"></div>
+    
+    <script>
+        async function testCORS() {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch('/test', {
+                    method: 'POST',
+                    mode: 'cors',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ test: 'data' })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = '<p style="color: green;">CORS Test Successful!</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<p style="color: red;">CORS Test Failed: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>
+    `);
 });
 
 // Error handling middleware

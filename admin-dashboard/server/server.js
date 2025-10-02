@@ -437,14 +437,22 @@ const getShipmentEmailHTML = (shipment, trackingID, trackUrl, isReceiver) => {
 
 // Authentication middleware - JWT-based for serverless
 const requireAuth = (req, res, next) => {
+    console.log('=== AUTH DEBUG ===');
+    console.log('Headers:', req.headers);
+    console.log('Cookies:', req.cookies);
+    console.log('Authorization header:', req.headers.authorization);
+    
     const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+    console.log('Extracted token:', token ? 'Present' : 'Missing');
     
     if (!token) {
+        console.log('No token found - returning 401');
         return res.status(401).json({ error: 'Authentication required' });
     }
     
     try {
         const decoded = jwt.verify(token, config.SESSION_SECRET);
+        console.log('JWT decoded successfully:', decoded);
         req.user = decoded;
         next();
     } catch (error) {
@@ -477,11 +485,13 @@ app.post('/admin/login', async (req, res) => {
             
             // Set token as cookie and return in response
             res.cookie('token', token, {
-                httpOnly: true,
+                httpOnly: false, // Set to false for debugging
                 secure: false, // Set to true in production with HTTPS
                 sameSite: 'lax',
                 maxAge: 24 * 60 * 60 * 1000 // 24 hours
             });
+            
+            console.log('Token created and cookie set:', token);
             
             res.json({ 
                 success: true, 

@@ -17,11 +17,21 @@ function initFirebase() {
                 
                 if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY) {
                     console.log('Using environment variables for Firebase auth');
+                    
+                    // Properly format the private key
+                    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+                    if (!privateKey.includes('\n')) {
+                        // Replace literal \n with actual newlines
+                        privateKey = privateKey.replace(/\\n/g, '\n');
+                    }
+                    
+                    console.log('Private key format check:', privateKey.includes('\n') ? 'Has newlines' : 'No newlines');
+                    
                     const serviceAccount = {
                         type: "service_account",
                         project_id: process.env.FIREBASE_PROJECT_ID,
                         private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-                        private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+                        private_key: privateKey,
                         client_email: process.env.FIREBASE_CLIENT_EMAIL,
                         client_id: process.env.FIREBASE_CLIENT_ID,
                         auth_uri: "https://accounts.google.com/o/oauth2/auth",
@@ -30,6 +40,14 @@ function initFirebase() {
                         client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.FIREBASE_CLIENT_EMAIL)}`,
                         universe_domain: "googleapis.com"
                     };
+                    
+                    console.log('Service account config:', {
+                        project_id: serviceAccount.project_id,
+                        client_email: serviceAccount.client_email,
+                        private_key_length: serviceAccount.private_key.length,
+                        private_key_starts_with: serviceAccount.private_key.substring(0, 20)
+                    });
+                    
                     admin.initializeApp({
                         credential: admin.credential.cert(serviceAccount),
                         projectId: process.env.FIREBASE_PROJECT_ID

@@ -130,72 +130,85 @@ module.exports = async (req, res) => {
         if (url.startsWith('/track/')) {
             const trackingID = url.split('/track/')[1];
             
-            console.log('Tracking request for ID:', trackingID);
+            console.log('=== TRACKING REQUEST ===');
+            console.log('Tracking ID:', trackingID);
+            console.log('URL:', url);
             
             if (!trackingID) {
                 return res.status(400).json({ 
-                success: false,
+                    success: false, 
                     message: 'Tracking ID required' 
                 });
             }
             
             const db = initFirebase();
             if (!db) {
+                console.log('Database not available');
                 return res.status(500).json({ 
-            success: false,
+                    success: false, 
                     message: 'Database not available' 
                 });
             }
             
-            const snap = await db.collection('shipments').where('trackingID', '==', trackingID).limit(1).get();
-            
-            console.log('Firestore query result:', snap.empty ? 'No results' : 'Found shipment');
-            
-            if (snap.empty) {
-                console.log('Tracking ID not found:', trackingID);
-                return res.status(404).json({ 
-            success: false,
-                    message: 'Tracking ID not found' 
+            console.log('Database initialized, making Firestore query...');
+            try {
+                const snap = await db.collection('shipments').where('trackingID', '==', trackingID).limit(1).get();
+                console.log('Firestore query completed successfully');
+                console.log('Query result:', snap.empty ? 'No results' : 'Found shipment');
+                
+                if (snap.empty) {
+                    console.log('Tracking ID not found:', trackingID);
+                    return res.status(404).json({ 
+                        success: false, 
+                        message: 'Tracking ID not found' 
+                    });
+                }
+                
+                const doc = snap.docs[0];
+                const data = doc.data();
+                console.log('Shipment found:', data.trackingID);
+
+                const toISO = (ts) => {
+                    try {
+                        if (!ts) return null;
+                        if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
+                        if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toISOString();
+                        if (typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toISOString();
+                        const asDate = new Date(ts);
+                        return isNaN(asDate.getTime()) ? null : asDate.toISOString();
+                    } catch (_) { return null; }
+                };
+
+                const normalizedHistory = (data.trackingHistory || []).map((h) => ({
+                    ...h,
+                    timestamp: toISO(h?.timestamp)
+                }));
+
+                return res.json({ 
+                    success: true, 
+                    data: {
+                        id: doc.id,
+                        trackingID: data.trackingID,
+                        status: data.status,
+                        estimatedDeliveryDate: toISO(data.estimatedDeliveryDate),
+                        lastUpdated: toISO(data.lastUpdated),
+                        origin: data.origin || null,
+                        destination: data.destination || null,
+                        sender: data.sender || null,
+                        receiver: data.receiver || null,
+                        package: data.package || null,
+                        currentLocation: data.currentLocation || null,
+                        trackingHistory: normalizedHistory
+                    }
+                });
+            } catch (firestoreError) {
+                console.error('Firestore query error:', firestoreError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Database query failed',
+                    error: firestoreError.message
                 });
             }
-            
-        const doc = snap.docs[0];
-        const data = doc.data();
-            console.log('Shipment found:', data.trackingID);
-
-        const toISO = (ts) => {
-            try {
-                if (!ts) return null;
-                if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
-                if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toISOString();
-                if (typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toISOString();
-                const asDate = new Date(ts);
-                return isNaN(asDate.getTime()) ? null : asDate.toISOString();
-            } catch (_) { return null; }
-        };
-
-        const normalizedHistory = (data.trackingHistory || []).map((h) => ({
-            ...h,
-            timestamp: toISO(h?.timestamp)
-        }));
-
-            return res.json({ 
-                success: true, 
-                data: {
-            id: doc.id,
-            trackingID: data.trackingID,
-            status: data.status,
-            estimatedDeliveryDate: toISO(data.estimatedDeliveryDate),
-            lastUpdated: toISO(data.lastUpdated),
-            origin: data.origin || null,
-            destination: data.destination || null,
-            sender: data.sender || null,
-            receiver: data.receiver || null,
-            package: data.package || null,
-            currentLocation: data.currentLocation || null,
-            trackingHistory: normalizedHistory
-                }
-            });
         }
         
         // 404 for unknown routes

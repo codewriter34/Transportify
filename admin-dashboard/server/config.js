@@ -28,7 +28,7 @@ module.exports = {
         USER: process.env.SMTP_USER || '',
         PASS: process.env.SMTP_PASS || '',
         FROM: process.env.EMAIL_FROM || 'no-reply@transportify.com',
-        TRACK_BASE_URL: process.env.TRACK_BASE_URL || 'http://localhost:3009/track'
+        TRACK_BASE_URL: process.env.TRACK_BASE_URL || 'https://transportifyy.netlify.app/track'
     }
     ,
     // MailerSend Configuration

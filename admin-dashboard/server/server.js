@@ -96,6 +96,7 @@ async function sendEmailUnified(options) {
             const emailParams = new EmailParams()
                 .setFrom(sentFrom)
                 .setTo(recipients)
+                .setReplyTo(new Sender('support@transportify.com', 'Transportify Support'))
                 .setSubject(subject)
                 .setText(text || '')
                 .setHtml(html || text || '');
@@ -876,12 +877,17 @@ app.use((req, res) => {
 });
 
 // Start server
-const PORT = config.PORT;
-app.listen(PORT, () => {
-console.log(`🚚 Transportify Admin Server running on port ${PORT}`);
-console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
-console.log(`🔐 Login: http://localhost:${PORT}/admin/login`);
-console.log(`📧 Email notifications: MailerSend enabled`);
-});
+const PORT = config.PORT || process.env.PORT || 3000;
 
+// Only start server if not in Vercel environment
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚚 Transportify Admin Server running on port ${PORT}`);
+    console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
+    console.log(`🔐 Login: http://localhost:${PORT}/admin/login`);
+    console.log(`📧 Email notifications: MailerSend enabled`);
+  });
+}
+
+// Export for Vercel
 module.exports = app;

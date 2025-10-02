@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "admin-dashboard/server/server.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["admin-dashboard/server/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "admin-dashboard/server/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

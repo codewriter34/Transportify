@@ -69,21 +69,15 @@ try {
 
 const db = admin.firestore();
 
-// CORS configuration - Allow specific origins
+// CORS configuration - More permissive for tracking
 const corsOptions = {
-    origin: [
-        'https://transportifyy.netlify.app',
-        'https://transportify-2mf215b8a-swankys-projects-4b0bf2b3.vercel.app',
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:5173'
-    ],
-    credentials: true,
+    origin: true, // Allow all origins for now
+    credentials: false, // Set to false for public tracking
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'Accept', 'Origin'],
     exposedHeaders: ['Set-Cookie'],
-    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+    optionsSuccessStatus: 200,
+    preflightContinue: false
 };
 
 // Apply CORS to all routes
@@ -300,6 +294,14 @@ app.post('/admin/api/shipments', requireAuth, async (req, res) => {
     }
 });
 
+// Handle OPTIONS for tracking endpoint
+app.options('/track/:trackingID', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.status(200).end();
+});
+
 // Public tracking lookup
 app.get('/track/:trackingID', async (req, res) => {
     try {
@@ -307,6 +309,11 @@ app.get('/track/:trackingID', async (req, res) => {
         console.log('Tracking ID:', req.params.trackingID);
         console.log('Origin:', req.headers.origin);
         console.log('User-Agent:', req.headers['user-agent']);
+        
+        // Set explicit CORS headers for tracking
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
         
         const { trackingID } = req.params;
         const snap = await db.collection('shipments').where('trackingID', '==', trackingID).limit(1).get();
@@ -384,10 +391,24 @@ app.get('/', (req, res) => {
 
 // Simple test route to verify CORS
 app.get('/simple-test', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
     res.json({ 
         message: 'Simple test successful',
         cors: 'working',
         timestamp: new Date().toISOString()
+    });
+});
+
+// Test tracking endpoint with a fake ID
+app.get('/track-test', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.json({ 
+        success: true,
+        data: {
+            trackingID: 'TEST123',
+            status: 'in-transit',
+            message: 'This is a test tracking response'
+        }
     });
 });
 

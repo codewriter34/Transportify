@@ -1,15 +1,19 @@
 {
-  "functions": {
-    "api/basic.cjs": {
-      "runtime": "nodejs18.x"
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/basic.cjs",
+      "use": "@vercel/node"
     },
-    "api/hello.cjs": {
-      "runtime": "nodejs18.x"
+    {
+      "src": "api/hello.cjs",
+      "use": "@vercel/node"
     },
-    "api/index.cjs": {
-      "runtime": "nodejs18.x"
+    {
+      "src": "api/index.cjs",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/basic",
@@ -26,5 +30,6 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "installCommand": "npm install"
 }

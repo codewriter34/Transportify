@@ -28,11 +28,41 @@ const { MailerSend, EmailParams, Sender, Recipient } = requireFromRoot('mailerse
 const config = require('./config');
 
 // Initialize Firebase Admin
-const serviceAccount = require(path.resolve(__dirname, '../../transportify-d94c3-firebase-adminsdk-fbsvc-b56fc3f2f0.json'));
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: 'transportify-d94c3'
-});
+let firebaseApp;
+try {
+    // Try to load from environment variables first (for Vercel)
+    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY) {
+        const serviceAccount = {
+            type: "service_account",
+            project_id: process.env.FIREBASE_PROJECT_ID,
+            private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+            private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            client_email: process.env.FIREBASE_CLIENT_EMAIL,
+            client_id: process.env.FIREBASE_CLIENT_ID,
+            auth_uri: "https://accounts.google.com/o/oauth2/auth",
+            token_uri: "https://oauth2.googleapis.com/token",
+            auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+            client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.FIREBASE_CLIENT_EMAIL)}`,
+            universe_domain: "googleapis.com"
+        };
+        firebaseApp = admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            projectId: process.env.FIREBASE_PROJECT_ID
+        });
+        console.log('Firebase initialized with environment variables');
+    } else {
+        // Fallback to JSON file (for local development)
+        const serviceAccount = require(path.resolve(__dirname, '../../transportify-d94c3-firebase-adminsdk-fbsvc-b56fc3f2f0.json'));
+        firebaseApp = admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            projectId: 'transportify-d94c3'
+        });
+        console.log('Firebase initialized with JSON file');
+    }
+} catch (error) {
+    console.error('Firebase initialization failed:', error);
+    // Continue without Firebase for now
+}
 
 const db = admin.firestore();
 

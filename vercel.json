@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "admin-dashboard/server/server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["admin-dashboard/server/**"]
+      }
     }
   ],
   "routes": [
@@ -14,5 +17,6 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "installCommand": "cd admin-dashboard/server && npm install"
 }

@@ -19,6 +19,7 @@ const express = requireFromRoot('express');
 const session = requireFromRoot('express-session');
 const cors = requireFromRoot('cors');
 const jwt = requireFromRoot('jsonwebtoken');
+const cookieParser = requireFromRoot('cookie-parser');
 const admin = requireFromRoot('firebase-admin');
 const nodemailer = requireFromRoot('nodemailer');
 const { MailerSend, EmailParams, Sender, Recipient } = requireFromRoot('mailersend');
@@ -152,8 +153,9 @@ const corsGeneral = cors({
         return callback(null, false);
     },
     credentials: true,
-    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie']
 });
 
 // Apply general CORS
@@ -194,6 +196,7 @@ app.use((req, res, next) => {
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Session configuration
 app.use(session({
@@ -930,5 +933,6 @@ if (process.env.VERCEL !== '1') {
 
 // Export for Vercel
 module.exports = app;
-/ /   F o r c e   d e p l o y  
+/ /   F o r c e   d e p l o y 
+ 
  

@@ -1,13 +1,19 @@
 {
   "version": 2,
-  "functions": {
-    "api/track.js": {
-      "runtime": "nodejs18.x"
+  "builds": [
+    {
+      "src": "api/track.js",
+      "use": "@vercel/node"
     },
-    "api/test.js": {
-      "runtime": "nodejs18.x"
+    {
+      "src": "api/test.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/index.cjs",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/track/(.*)",

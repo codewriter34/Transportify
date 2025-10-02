@@ -11,33 +11,41 @@ function initFirebase() {
             admin = require('firebase-admin');
             
             if (!admin.apps.length) {
-    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY) {
-        const serviceAccount = {
-            type: "service_account",
-            project_id: process.env.FIREBASE_PROJECT_ID,
-            private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-            private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-            client_email: process.env.FIREBASE_CLIENT_EMAIL,
-            client_id: process.env.FIREBASE_CLIENT_ID,
-            auth_uri: "https://accounts.google.com/o/oauth2/auth",
-            token_uri: "https://oauth2.googleapis.com/token",
-            auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-            client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.FIREBASE_CLIENT_EMAIL)}`,
-            universe_domain: "googleapis.com"
-        };
+                console.log('Initializing Firebase...');
+                console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Not set');
+                console.log('FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Not set');
+                
+                if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY) {
+                    console.log('Using environment variables for Firebase auth');
+                    const serviceAccount = {
+                        type: "service_account",
+                        project_id: process.env.FIREBASE_PROJECT_ID,
+                        private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+                        private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+                        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+                        client_id: process.env.FIREBASE_CLIENT_ID,
+                        auth_uri: "https://accounts.google.com/o/oauth2/auth",
+                        token_uri: "https://oauth2.googleapis.com/token",
+                        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+                        client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.FIREBASE_CLIENT_EMAIL)}`,
+                        universe_domain: "googleapis.com"
+                    };
                     admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            projectId: process.env.FIREBASE_PROJECT_ID
-        });
-    } else {
+                        credential: admin.credential.cert(serviceAccount),
+                        projectId: process.env.FIREBASE_PROJECT_ID
+                    });
+                } else {
+                    console.log('Using default project for Firebase auth');
                     admin.initializeApp({
-            projectId: 'transportify-d94c3'
-        });
+                        projectId: 'transportify-d94c3'
+                    });
                 }
-    }
+            }
             db = admin.firestore();
-} catch (error) {
-    console.error('Firebase initialization failed:', error);
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization failed:', error);
+            return null;
         }
     }
     return db;
@@ -86,11 +94,35 @@ module.exports = async (req, res) => {
         // Test endpoint
         if (url === '/test') {
             return res.json({ 
-            success: true,
+                success: true,
                 message: 'Test endpoint working',
                 method: req.method,
                 url: req.url,
                 timestamp: new Date().toISOString()
+            });
+        }
+        
+        // Firebase test endpoint
+        if (url === '/firebase-test') {
+            const db = initFirebase();
+            if (!db) {
+                return res.json({
+                    success: false,
+                    message: 'Firebase not available',
+                    env: {
+                        FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Not set',
+                        FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Not set'
+                    }
+                });
+            }
+            
+            return res.json({
+                success: true,
+                message: 'Firebase is working',
+                env: {
+                    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Not set',
+                    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Not set'
+                }
             });
         }
         

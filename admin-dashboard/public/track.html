@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Shipment - Transportify</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .field-label{color:#374151;font-weight:600}
+    </style>
+    </head>
+<body class="bg-gray-50">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-2xl font-bold text-[#1E3A8A] mb-4">Track Your Shipment</h1>
+        <div class="bg-white rounded-lg shadow p-4 mb-6 flex space-x-3">
+            <input id="trackingInput" type="text" placeholder="Enter tracking number (e.g., TRANS...)" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+            <button id="trackingBtn" class="btn-solid-blue px-4 py-2 rounded-md text-white">Track</button>
+        </div>
+
+        <div id="result" class="hidden bg-white rounded-lg shadow p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="field-label">Tracking ID</p>
+                    <p id="rTracking" class="mb-3"></p>
+                    <p class="field-label">Status</p>
+                    <p id="rStatus" class="mb-3"></p>
+                    <p class="field-label">Estimated Delivery</p>
+                    <p id="rEta" class="mb-3"></p>
+                    <p class="field-label">Last Updated</p>
+                    <p id="rUpdated" class="mb-3"></p>
+                    <p class="field-label">From</p>
+                    <p id="rOrigin" class="mb-3"></p>
+                    <p class="field-label">To</p>
+                    <p id="rDestination" class="mb-3"></p>
+                </div>
+                <div>
+                    <div id="trackMap" class="w-full h-64 rounded border border-gray-200"></div>
+                </div>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold text-[#1E3A8A] mb-2">Tracking History</h3>
+                <ul id="rHistory" class="list-disc pl-5 text-sm text-[#374151]"></ul>
+            </div>
+        </div>
+
+        <div id="notFound" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-800 rounded p-4">
+            Tracking ID not found.
+        </div>
+    </div>
+
+    <script>
+        let tmap;
+        document.getElementById('trackingBtn').addEventListener('click', trackShipment);
+        document.getElementById('trackingInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ trackShipment(); }});
+
+        async function trackShipment(){
+            const tid = document.getElementById('trackingInput').value.trim();
+            if(!tid){ return; }
+            hideAll();
+            try{
+                const res = await fetch(`/track/${encodeURIComponent(tid)}`);
+                const data = await res.json();
+                if(!res.ok || !data.success){ showNotFound(); return; }
+                renderResult(data.data);
+            }catch(err){
+                showNotFound();
+            }
+        }
+
+        function hideAll(){
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('notFound').classList.add('hidden');
+        }
+        function showNotFound(){
+            document.getElementById('notFound').classList.remove('hidden');
+        }
+        function renderResult(d){
+            document.getElementById('rTracking').textContent = d.trackingID || '';
+            document.getElementById('rStatus').textContent = d.status || '';
+            document.getElementById('rEta').textContent = d.estimatedDeliveryDate ? new Date(d.estimatedDeliveryDate.seconds ? d.estimatedDeliveryDate.seconds*1000 : d.estimatedDeliveryDate).toLocaleString() : '—';
+            document.getElementById('rUpdated').textContent = d.lastUpdated ? new Date(d.lastUpdated.seconds ? d.lastUpdated.seconds*1000 : d.lastUpdated).toLocaleString() : '—';
+            document.getElementById('rOrigin').textContent = formatPlace(d.origin);
+            document.getElementById('rDestination').textContent = formatPlace(d.destination);
+
+            const list = document.getElementById('rHistory');
+            list.innerHTML = '';
+            (d.trackingHistory||[]).forEach(h=>{
+                const li = document.createElement('li');
+                const ts = h.timestamp ? new Date(h.timestamp.seconds ? h.timestamp.seconds*1000 : h.timestamp).toLocaleString() : '';
+                li.textContent = `${ts} • ${h.status || ''} • ${h.location || ''}`;
+                list.appendChild(li);
+            });
+
+            if(!tmap){
+                tmap = L.map('trackMap').setView([0,0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(tmap);
+            }
+            const coords = (d.currentLocation && d.currentLocation.coordinates) || (d.origin && d.origin.coordinates);
+            if(coords && typeof coords.lat==='number' && typeof coords.lng==='number'){
+                L.marker([coords.lat, coords.lng]).addTo(tmap);
+                tmap.setView([coords.lat, coords.lng], 9);
+            }
+
+            document.getElementById('result').classList.remove('hidden');
+        }
+        function formatPlace(p){
+            if(!p) return '—';
+            const parts = [p.city, p.state, p.country].filter(Boolean);
+            return parts.join(', ');
+        }
+    </script>
+</body>
+</html>
+
+

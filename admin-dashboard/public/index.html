@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transportify Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Header -->
+    <nav class="bg-[#1E3A8A] shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="text-2xl font-bold text-white">
+                        🚚 Transportify Admin
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-blue-200">Admin Dashboard</span>
+                    <button id="logoutBtn" class="bg-[#84CC16] hover:bg-[#73B106] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Add Shipment Form -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-[#1E3A8A] mb-6 flex items-center">
+                <i data-lucide="plus-circle" class="mr-2"></i>
+                Add New Shipment
+            </h2>
+            
+            <form id="shipmentForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Sender Information -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-[#374151] border-b border-gray-200 pb-2">Sender Information</h3>
+                    
+                    <div>
+                        <label for="senderName" class="block text-sm font-medium text-[#374151] mb-1">Sender Name *</label>
+                        <input type="text" id="senderName" name="senderName" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="senderEmail" class="block text-sm font-medium text-[#374151] mb-1">Sender Email *</label>
+                        <input type="email" id="senderEmail" name="senderEmail" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="senderPhone" class="block text-sm font-medium text-[#374151] mb-1">Sender Phone *</label>
+                        <input type="tel" id="senderPhone" name="senderPhone" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="senderAddress" class="block text-sm font-medium text-[#374151] mb-1">Sender Address *</label>
+                        <textarea id="senderAddress" name="senderAddress" rows="2" required
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent"></textarea>
+                    </div>
+                </div>
+
+                <!-- Receiver Information -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-[#374151] border-b border-gray-200 pb-2">Receiver Information</h3>
+                    
+                    <div>
+                        <label for="receiverName" class="block text-sm font-medium text-[#374151] mb-1">Receiver Name *</label>
+                        <input type="text" id="receiverName" name="receiverName" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="receiverEmail" class="block text-sm font-medium text-[#374151] mb-1">Receiver Email *</label>
+                        <input type="email" id="receiverEmail" name="receiverEmail" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="receiverPhone" class="block text-sm font-medium text-[#374151] mb-1">Receiver Phone *</label>
+                        <input type="tel" id="receiverPhone" name="receiverPhone" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="receiverAddress" class="block text-sm font-medium text-[#374151] mb-1">Receiver Address *</label>
+                        <textarea id="receiverAddress" name="receiverAddress" rows="2" required
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent"></textarea>
+                    </div>
+                </div>
+
+                <!-- Origin Details -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-[#374151] border-b border-gray-200 pb-2">Origin Details</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="originCity" class="block text-sm font-medium text-[#374151] mb-1">City *</label>
+                            <input type="text" id="originCity" name="originCity" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="originState" class="block text-sm font-medium text-[#374151] mb-1">State *</label>
+                            <input type="text" id="originState" name="originState" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="originCountry" class="block text-sm font-medium text-[#374151] mb-1">Country *</label>
+                        <input type="text" id="originCountry" name="originCountry" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="originFacility" class="block text-sm font-medium text-[#374151] mb-1">Facility</label>
+                        <input type="text" id="originFacility" name="originFacility" placeholder="e.g., Lagos Hub"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                </div>
+
+                <!-- Destination Details -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-[#374151] border-b border-gray-200 pb-2">Destination Details</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="destinationCity" class="block text-sm font-medium text-[#374151] mb-1">City *</label>
+                            <input type="text" id="destinationCity" name="destinationCity" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="destinationState" class="block text-sm font-medium text-[#374151] mb-1">State *</label>
+                            <input type="text" id="destinationState" name="destinationState" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="destinationCountry" class="block text-sm font-medium text-[#374151] mb-1">Country *</label>
+                        <input type="text" id="destinationCountry" name="destinationCountry" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="destinationFacility" class="block text-sm font-medium text-[#374151] mb-1">Facility</label>
+                        <input type="text" id="destinationFacility" name="destinationFacility" placeholder="e.g., Abuja Hub"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                    </div>
+                </div>
+
+                <!-- Package Details -->
+                <div class="space-y-4 md:col-span-2">
+                    <h3 class="text-lg font-semibold text-[#374151] border-b border-gray-200 pb-2">Package Details</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label for="packageDescription" class="block text-sm font-medium text-[#374151] mb-1">Description *</label>
+                            <input type="text" id="packageDescription" name="packageDescription" required placeholder="e.g., Electronics"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="weight" class="block text-sm font-medium text-[#374151] mb-1">Weight (kg) *</label>
+                            <input type="number" id="weight" name="weight" step="0.1" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="dimensions" class="block text-sm font-medium text-[#374151] mb-1">Dimensions (L×W×H cm)</label>
+                            <input type="text" id="dimensions" name="dimensions" placeholder="e.g., 30×20×15"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="serviceType" class="block text-sm font-medium text-[#374151] mb-1">Service Type</label>
+                            <select id="serviceType" name="serviceType"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                                <option value="standard">Standard</option>
+                                <option value="express">Express</option>
+                                <option value="overnight">Overnight</option>
+                                <option value="economy">Economy</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="carrierId" class="block text-sm font-medium text-[#374151] mb-1">Carrier ID</label>
+                            <input type="text" id="carrierId" name="carrierId" placeholder="Optional"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="driverId" class="block text-sm font-medium text-[#374151] mb-1">Driver ID</label>
+                            <input type="text" id="driverId" name="driverId" placeholder="Optional"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Information -->
+                <div class="space-y-4 md:col-span-2">
+                    <h3 class="text-lg font-semibold text-[#374151] border-b border-gray-200 pb-2">Delivery Information</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="estimatedDeliveryDate" class="block text-sm font-medium text-[#374151] mb-1">Estimated Delivery Date *</label>
+                            <input type="datetime-local" id="estimatedDeliveryDate" name="estimatedDeliveryDate" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-[#374151] mb-1">Initial Status</label>
+                            <select id="status" name="status"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                                <option value="pending">Pending</option>
+                                <option value="processing">Processing</option>
+                                <option value="in-transit">In Transit</option>
+                                <option value="out-for-delivery">Out for Delivery</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="md:col-span-2">
+                    <button type="submit" 
+                            class="w-full btn-solid-green text-white px-6 py-3 rounded-md font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        <i data-lucide="truck" class="inline mr-2"></i>
+                        Create Shipment
+                    </button>
+                </div>
+            </form>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
+                <div class="flex items-center">
+                    <i data-lucide="check-circle" class="mr-2"></i>
+                    <span id="successText"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-[#3B82F6]">
+                        <i data-lucide="package" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-[#374151]">Total Shipments</p>
+                        <p class="text-2xl font-bold text-[#1E3A8A]" id="totalShipments">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-[#84CC16]">
+                        <i data-lucide="truck" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-[#374151]">In Transit</p>
+                        <p class="text-2xl font-bold text-[#1E3A8A]" id="inTransitCount">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                        <i data-lucide="clock" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-[#374151]">Pending</p>
+                        <p class="text-2xl font-bold text-[#1E3A8A]" id="pendingCount">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-[#374151]">Delivered</p>
+                        <p class="text-2xl font-bold text-[#1E3A8A]" id="deliveredCount">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipments Map -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-[#1E3A8A] mb-6 flex items-center">
+                <i data-lucide="map" class="mr-2"></i>
+                Shipments Map
+            </h2>
+            <div class="flex items-center space-x-3 mb-4">
+                <input id="mapSearchInput" type="text" placeholder="Search location (city, state, country)"
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                <button id="mapSearchBtn" class="btn-solid-blue px-4 py-2 rounded-md text-white">Search</button>
+                <button id="useCurrentLocationBtn" class="btn-solid-green px-4 py-2 rounded-md text-white">Use Current Location</button>
+            </div>
+            <div id="map" class="w-full h-96 rounded-lg border border-gray-300"></div>
+        </div>
+
+        <!-- Shipments Table -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-[#1E3A8A] mb-6 flex items-center">
+                <i data-lucide="list" class="mr-2"></i>
+                All Shipments
+            </h2>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Tracking ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Sender</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Destination</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Created</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shipmentsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Shipments will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="utils.js"></script>
+    <script src="script-leaflet.js"></script>
+</body>
+</html>

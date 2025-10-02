@@ -1,0 +1,304 @@
+/* Custom CSS for Transportify Admin Dashboard */
+
+/* Corporate Color Palette */
+:root {
+    --primary-navy: #1E3A8A;
+    --secondary-sky: #3B82F6;
+    --background-white: #FFFFFF;
+    --text-gray: #374151;
+    --accent-lime: #84CC16;
+    --accent-lime-hover: #73B106;
+    --accent-green: #16A34A;
+    --accent-green-hover: #15803D;
+    --accent-blue: #2563EB;
+    --accent-blue-hover: #1D4ED8;
+}
+
+/* Custom Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Form Animations */
+.form-section {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.form-section:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.form-section:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Success Message Animation */
+.success-message {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Button Hover Effects */
+.btn-primary {
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Solid Buttons (override Tailwind conflicts) */
+.btn-solid-green {
+    background-color: var(--accent-green) !important;
+    color: #ffffff !important;
+}
+
+.btn-solid-green:hover,
+.btn-solid-green:focus {
+    background-color: var(--accent-green-hover) !important;
+}
+
+.btn-solid-blue {
+    background-color: var(--accent-blue) !important;
+    color: #ffffff !important;
+}
+
+.btn-solid-blue:hover,
+.btn-solid-blue:focus {
+    background-color: var(--accent-blue-hover) !important;
+}
+
+/* Card Hover Effects */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Map Container */
+.map-container {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Styling */
+.table-row {
+    transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+    background-color: #f8fafc;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-transit {
+    background-color: #dbeafe;
+    color: var(--primary-navy);
+}
+
+.status-delivered {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-cancelled {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid var(--secondary-sky);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--secondary-sky);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-navy);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .mobile-stack {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .mobile-full {
+        grid-column: 1 / -1 !important;
+    }
+}
+
+/* Mapbox Custom Styles */
+.mapboxgl-popup-content {
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.mapboxgl-popup-close-button {
+    color: var(--text-gray);
+    font-size: 18px;
+    padding: 4px 8px;
+}
+
+.mapboxgl-popup-close-button:hover {
+    color: var(--primary-navy);
+}
+
+/* Form Validation Styles */
+.form-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Success States */
+.form-success {
+    border-color: var(--accent-lime) !important;
+    box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.1) !important;
+}
+
+/* Icon Animations */
+.icon-bounce {
+    animation: pulse 2s infinite;
+}
+
+/* Loading States */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    color: white;
+    font-weight: 600;
+    z-index: 1000;
+    animation: slideInRight 0.5s ease-out;
+}
+
+.notification-success {
+    background-color: var(--accent-lime);
+}
+
+.notification-error {
+    background-color: #ef4444;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-break {
+        page-break-after: always;
+    }
+}

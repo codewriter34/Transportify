@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 const Contact = () => {
+  // Updated with Colorado Henderson address - deployment trigger
   const [formData, setFormData] = useState({
     name: '',
     email: '',

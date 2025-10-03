@@ -114,6 +114,7 @@ export default function TrackPage() {
   const [trackingID, setTrackingID] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Updated with all new package fields - deployment trigger
   const [result, setResult] = useState<ShipmentTracking | null>(null);
   // const [showEditModal, setShowEditModal] = useState(false);
   // const [editForm, setEditForm] = useState({

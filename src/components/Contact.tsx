@@ -154,8 +154,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Address</h4>
-                    <p className="text-gray-600">123 Logistics Street</p>
-                    <p className="text-gray-600">San Francisco, CA 94105</p>
+                    <p className="text-gray-600">1234 Mountain View Drive</p>
+                    <p className="text-gray-600">Henderson, CO 80640</p>
                     <p className="text-gray-600">United States</p>
                   </div>
                 </div>

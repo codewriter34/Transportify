@@ -621,11 +621,149 @@ async function handleLogout() {
     }
 }
 
+// Edit shipment function
+function editShipment(shipmentId) {
+    const shipment = shipments.find(s => s.id === shipmentId);
+    if (!shipment) {
+        alert('Shipment not found');
+        return;
+    }
+
+    // Populate the edit form with current data
+    document.getElementById('editStatus').value = shipment.status || 'pending';
+    document.getElementById('editEstimatedDelivery').value = shipment.estimatedDeliveryDate ? 
+        new Date(shipment.estimatedDeliveryDate).toISOString().slice(0, 16) : '';
+    document.getElementById('editCurrentLocation').value = shipment.currentLocation?.name || '';
+
+    // Set sender information
+    document.getElementById('editSenderName').value = shipment.sender?.name || '';
+    document.getElementById('editSenderEmail').value = shipment.sender?.email || '';
+    document.getElementById('editSenderPhone').value = shipment.sender?.phone || '';
+    document.getElementById('editSenderAddress').value = shipment.sender?.address || '';
+
+    // Set receiver information
+    document.getElementById('editReceiverName').value = shipment.receiver?.name || '';
+    document.getElementById('editReceiverEmail').value = shipment.receiver?.email || '';
+    document.getElementById('editReceiverPhone').value = shipment.receiver?.phone || '';
+    document.getElementById('editReceiverAddress').value = shipment.receiver?.address || '';
+
+    // Set package information
+    document.getElementById('editPackageName').value = shipment.package?.name || '';
+    document.getElementById('editPackageDescription').value = shipment.package?.description || '';
+    document.getElementById('editPackageCategory').value = shipment.package?.category || '';
+    document.getElementById('editPackageCost').value = shipment.package?.cost || '';
+    document.getElementById('editPackageWeight').value = shipment.package?.weight || '';
+    document.getElementById('editPackageDimensions').value = shipment.package?.dimensions || '';
+    document.getElementById('editPaymentMethod').value = shipment.package?.paymentMethod || '';
+    document.getElementById('editServiceType').value = shipment.package?.serviceType || 'standard';
+
+    // Show the modal
+    document.getElementById('editModal').classList.remove('hidden');
+    
+    // Store the shipment ID for the form submission
+    document.getElementById('editForm').dataset.shipmentId = shipmentId;
+}
+
+// Close edit modal
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+}
+
+// Handle edit form submission
+async function handleEditFormSubmit(event) {
+    event.preventDefault();
+    
+    const shipmentId = document.getElementById('editForm').dataset.shipmentId;
+    if (!shipmentId) {
+        alert('Shipment ID not found');
+        return;
+    }
+
+    const updateData = {
+        status: document.getElementById('editStatus').value,
+        estimatedDeliveryDate: document.getElementById('editEstimatedDelivery').value ?
+            new Date(document.getElementById('editEstimatedDelivery').value).toISOString() : null,
+        currentLocation: {
+            name: document.getElementById('editCurrentLocation').value || null
+        },
+        sender: {
+            name: document.getElementById('editSenderName').value || '',
+            email: document.getElementById('editSenderEmail').value || '',
+            phone: document.getElementById('editSenderPhone').value || '',
+            address: document.getElementById('editSenderAddress').value || ''
+        },
+        receiver: {
+            name: document.getElementById('editReceiverName').value || '',
+            email: document.getElementById('editReceiverEmail').value || '',
+            phone: document.getElementById('editReceiverPhone').value || '',
+            address: document.getElementById('editReceiverAddress').value || ''
+        },
+        package: {
+            name: document.getElementById('editPackageName').value || '',
+            description: document.getElementById('editPackageDescription').value || '',
+            category: document.getElementById('editPackageCategory').value || '',
+            cost: parseFloat(document.getElementById('editPackageCost').value) || null,
+            weight: parseFloat(document.getElementById('editPackageWeight').value) || null,
+            dimensions: document.getElementById('editPackageDimensions').value || '',
+            paymentMethod: document.getElementById('editPaymentMethod').value || '',
+            serviceType: document.getElementById('editServiceType').value || 'standard'
+        }
+    };
+
+    try {
+        const response = await fetch(`/admin/api/shipments/${shipmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(updateData)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Shipment updated successfully!');
+            closeEditModal();
+            
+            // Update the local shipments array immediately
+            const shipmentIndex = shipments.findIndex(s => s.id === shipmentId);
+            if (shipmentIndex !== -1) {
+                shipments[shipmentIndex] = result.data;
+            }
+            
+            // Update the UI immediately
+            updateShipmentsTable();
+            updateMapMarkers();
+            updateStats();
+            
+            // Also reload from server to ensure we have the latest data
+            setTimeout(() => {
+                loadShipments();
+            }, 500);
+        } else {
+            alert('Failed to update shipment: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error updating shipment:', error);
+        alert('Error updating shipment. Please try again.');
+    }
+}
+
+// Add event listener for edit form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const editForm = document.getElementById('editForm');
+    if (editForm) {
+        editForm.addEventListener('submit', handleEditFormSubmit);
+    }
+});
+
 // Export functions to global scope
 window.adminDashboard = {
     editShipment,
     deleteShipment,
     handleLogout,
-    updateShipmentLocation
+    updateShipmentLocation,
+    closeEditModal
 };
 

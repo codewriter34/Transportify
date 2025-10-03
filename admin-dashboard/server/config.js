@@ -36,5 +36,13 @@ module.exports = {
         API_KEY: process.env.MAILERSEND_API_KEY || '',
         FROM_EMAIL: process.env.MAILERSEND_FROM_EMAIL || 'noreply@test.mailersend.net',
         FROM_NAME: process.env.MAILERSEND_FROM_NAME || 'Transportify'
+    },
+    
+    // Mailgun Configuration
+    MAILGUN: {
+        API_KEY: process.env.MAILGUN_API_KEY || '',
+        DOMAIN: process.env.MAILGUN_DOMAIN || '',
+        FROM_EMAIL: process.env.MAILGUN_FROM_EMAIL || 'noreply@transportify.com',
+        FROM_NAME: process.env.MAILGUN_FROM_NAME || 'Transportify'
     }
 };

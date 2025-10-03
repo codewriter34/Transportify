@@ -126,7 +126,7 @@ async function geocodeAddress(address) {
                 { lat: 51.5074, lng: -0.1278 }, // London
                 { lat: 35.6762, lng: 139.6503 }, // Tokyo
                 { lat: -33.8688, lng: 151.2093 }, // Sydney
-                { lat: 37.7749, lng: -122.4194 }, // San Francisco
+                { lat: 39.9205, lng: -104.9446 }, // Henderson, Colorado
                 { lat: 48.8566, lng: 2.3522 }, // Paris
                 { lat: 55.7558, lng: 37.6176 }, // Moscow
                 { lat: -22.9068, lng: -43.1729 }, // Rio de Janeiro

@@ -335,6 +335,30 @@ export default function TrackPage() {
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-6">Package Details</h3>
               <div className="space-y-4">
+                {result.package?.name && (
+                  <div>
+                    <div className="text-sm text-gray-500">Item Name</div>
+                    <div className="font-medium text-gray-900">{result.package.name}</div>
+                  </div>
+                )}
+                {result.package?.description && (
+                  <div>
+                    <div className="text-sm text-gray-500">Description</div>
+                    <div className="font-medium text-gray-900">{result.package.description}</div>
+                  </div>
+                )}
+                {result.package?.category && (
+                  <div>
+                    <div className="text-sm text-gray-500">Category</div>
+                    <div className="font-medium text-gray-900 capitalize">{result.package.category}</div>
+                  </div>
+                )}
+                {result.package?.cost && (
+                  <div>
+                    <div className="text-sm text-gray-500">Cost</div>
+                    <div className="font-medium text-gray-900">${result.package.cost}</div>
+                  </div>
+                )}
                 <div>
                   <div className="text-sm text-gray-500">Service Type</div>
                   <div className="font-medium text-gray-900 capitalize">{result.package?.serviceType || 'Standard'}</div>
@@ -349,6 +373,12 @@ export default function TrackPage() {
                   <div>
                     <div className="text-sm text-gray-500">Dimensions</div>
                     <div className="font-medium text-gray-900">{result.package.dimensions}</div>
+                  </div>
+                )}
+                {result.package?.paymentMethod && (
+                  <div>
+                    <div className="text-sm text-gray-500">Payment Method</div>
+                    <div className="font-medium text-gray-900 capitalize">{result.package.paymentMethod}</div>
                   </div>
                 )}
                 {result.estimatedDeliveryDate && (

@@ -167,14 +167,46 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label for="packageDescription" class="block text-sm font-medium text-[#374151] mb-1">Description *</label>
-                            <input type="text" id="packageDescription" name="packageDescription" required placeholder="e.g., Electronics"
+                            <label for="packageName" class="block text-sm font-medium text-[#374151] mb-1">Item Name *</label>
+                            <input type="text" id="packageName" name="packageName" required placeholder="e.g., iPhone 15 Pro"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
                         </div>
                         
                         <div>
-                            <label for="weight" class="block text-sm font-medium text-[#374151] mb-1">Weight (kg) *</label>
-                            <input type="number" id="weight" name="weight" step="0.1" required
+                            <label for="packageDescription" class="block text-sm font-medium text-[#374151] mb-1">Description</label>
+                            <input type="text" id="packageDescription" name="packageDescription" placeholder="e.g., Latest iPhone model"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="packageCategory" class="block text-sm font-medium text-[#374151] mb-1">Item Category</label>
+                            <select id="packageCategory" name="packageCategory"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                                <option value="">Select Category</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="clothing">Clothing</option>
+                                <option value="books">Books</option>
+                                <option value="home">Home & Garden</option>
+                                <option value="sports">Sports</option>
+                                <option value="health">Health & Beauty</option>
+                                <option value="automotive">Automotive</option>
+                                <option value="jewelry">Jewelry</option>
+                                <option value="toys">Toys</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="cost" class="block text-sm font-medium text-[#374151] mb-1">Cost ($)</label>
+                            <input type="number" id="cost" name="cost" step="0.01" placeholder="0.00"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label for="weight" class="block text-sm font-medium text-[#374151] mb-1">Weight (kg)</label>
+                            <input type="number" id="weight" name="weight" step="0.1" placeholder="Optional"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
                         </div>
                         
@@ -182,6 +214,27 @@
                             <label for="dimensions" class="block text-sm font-medium text-[#374151] mb-1">Dimensions (L×W×H cm)</label>
                             <input type="text" id="dimensions" name="dimensions" placeholder="e.g., 30×20×15"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="paymentMethod" class="block text-sm font-medium text-[#374151] mb-1">Payment Method</label>
+                            <select id="paymentMethod" name="paymentMethod"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent">
+                                <option value="">Select Payment Method</option>
+                                <option value="cash">Cash</option>
+                                <option value="credit-card">Credit Card</option>
+                                <option value="debit-card">Debit Card</option>
+                                <option value="bank-transfer">Bank Transfer</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="venmo">Venmo</option>
+                                <option value="cashapp">Cash App</option>
+                                <option value="zelle">Zelle</option>
+                                <option value="apple-pay">Apple Pay</option>
+                                <option value="chime">Chime</option>
+                                <option value="gift-cards">Gift Cards</option>
+                                <option value="crypto">Cryptocurrency</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
                         
                         <div>
@@ -230,6 +283,7 @@
                                 <option value="processing">Processing</option>
                                 <option value="in-transit">In Transit</option>
                                 <option value="out-for-delivery">Out for Delivery</option>
+                                <option value="on-hold">On Hold</option>
                                 <option value="delivered">Delivered</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
@@ -345,6 +399,179 @@
                         <!-- Shipments will be populated here -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Shipment Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] flex flex-col">
+                <!-- Header - Fixed -->
+                <div class="flex justify-between items-center p-6 border-b bg-white">
+                    <h3 class="text-xl font-semibold text-gray-900">Edit Shipment</h3>
+                    <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Content - Scrollable -->
+                <div class="flex-1 overflow-y-auto p-6" style="max-height: calc(95vh - 140px);">
+                    <form id="editForm" class="space-y-6">
+                        <!-- Status and Delivery -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="editStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select id="editStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="pending">Pending</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="in-transit">In Transit</option>
+                                    <option value="out-for-delivery">Out for Delivery</option>
+                                    <option value="on-hold">On Hold</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="editEstimatedDelivery" class="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
+                                <input type="datetime-local" id="editEstimatedDelivery" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- Current Location -->
+                        <div>
+                            <label for="editCurrentLocation" class="block text-sm font-medium text-gray-700 mb-1">Current Location</label>
+                            <input type="text" id="editCurrentLocation" placeholder="e.g., Chicago Distribution Center" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <!-- Sender Information -->
+                        <div class="border-t pt-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Sender Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="editSenderName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                    <input type="text" id="editSenderName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editSenderEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input type="email" id="editSenderEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editSenderPhone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <input type="text" id="editSenderPhone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editSenderAddress" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                    <input type="text" id="editSenderAddress" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Receiver Information -->
+                        <div class="border-t pt-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Receiver Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="editReceiverName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                    <input type="text" id="editReceiverName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editReceiverEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input type="email" id="editReceiverEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editReceiverPhone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <input type="text" id="editReceiverPhone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editReceiverAddress" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                    <input type="text" id="editReceiverAddress" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Package Information -->
+                        <div class="border-t pt-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Package Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="editPackageName" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                                    <input type="text" id="editPackageName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editPackageDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                    <input type="text" id="editPackageDescription" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editPackageCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                    <select id="editPackageCategory" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Select Category</option>
+                                        <option value="electronics">Electronics</option>
+                                        <option value="clothing">Clothing</option>
+                                        <option value="books">Books</option>
+                                        <option value="home">Home & Garden</option>
+                                        <option value="sports">Sports</option>
+                                        <option value="health">Health & Beauty</option>
+                                        <option value="automotive">Automotive</option>
+                                        <option value="jewelry">Jewelry</option>
+                                        <option value="toys">Toys</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="editPackageCost" class="block text-sm font-medium text-gray-700 mb-1">Cost ($)</label>
+                                    <input type="number" id="editPackageCost" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editPackageWeight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+                                    <input type="number" id="editPackageWeight" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editPackageDimensions" class="block text-sm font-medium text-gray-700 mb-1">Dimensions</label>
+                                    <input type="text" id="editPackageDimensions" placeholder="e.g., 10x10x5 cm" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="editPaymentMethod" class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                                    <select id="editPaymentMethod" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Select Payment Method</option>
+                                        <option value="cash">Cash</option>
+                                        <option value="credit-card">Credit Card</option>
+                                        <option value="debit-card">Debit Card</option>
+                                        <option value="bank-transfer">Bank Transfer</option>
+                                        <option value="paypal">PayPal</option>
+                                        <option value="venmo">Venmo</option>
+                                        <option value="cashapp">Cash App</option>
+                                        <option value="zelle">Zelle</option>
+                                        <option value="apple-pay">Apple Pay</option>
+                                        <option value="chime">Chime</option>
+                                        <option value="gift-cards">Gift Cards</option>
+                                        <option value="crypto">Cryptocurrency</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="editServiceType" class="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
+                                    <select id="editServiceType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="standard">Standard</option>
+                                        <option value="express">Express</option>
+                                        <option value="overnight">Overnight</option>
+                                        <option value="economy">Economy</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Action Buttons - Fixed at bottom -->
+                <div class="flex justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-lg sticky bottom-0">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                        Cancel
+                    </button>
+                    <button type="submit" form="editForm" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        Update Shipment
+                    </button>
+                </div>
             </div>
         </div>
     </div>

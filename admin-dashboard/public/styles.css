@@ -162,6 +162,11 @@
     color: #991b1b;
 }
 
+.status-on-hold {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
 /* Loading Spinner */
 .loading-spinner {
     border: 3px solid #f3f4f6;
@@ -301,4 +306,31 @@
     .print-break {
         page-break-after: always;
     }
+}
+
+/* Modal scrolling fixes */
+#editModal .overflow-y-auto {
+    max-height: calc(95vh - 140px); /* Account for header and footer */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+#editModal .overflow-y-auto::-webkit-scrollbar {
+    width: 8px;
+}
+
+#editModal .overflow-y-auto::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 4px;
+}
+
+#editModal .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+#editModal .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }

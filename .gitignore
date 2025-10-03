@@ -14,6 +14,7 @@ firebase-config.ts
 .env.development.local
 .env.test.local
 .env.production.local
+admin-dashboard/server/.env
 
 # Node modules
 node_modules/

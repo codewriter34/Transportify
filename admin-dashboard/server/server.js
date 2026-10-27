@@ -3,26 +3,14 @@ const path = require('path');
 // Load environment variables from .env
 try { require('dotenv').config(); } catch (_) {}
 
-// Robust resolver to pull deps from root without local installs
-const { createRequire } = require('module');
-const requireFromRoot = (id) => {
-    try {
-        return require(id);
-    } catch (_) {
-        const rootPkgJson = path.resolve(__dirname, '../../package.json');
-        const rootRequire = createRequire(rootPkgJson);
-        return rootRequire(id);
-    }
-};
-
-const express = requireFromRoot('express');
-const session = requireFromRoot('express-session');
-const cors = requireFromRoot('cors');
-const jwt = requireFromRoot('jsonwebtoken');
-const cookieParser = requireFromRoot('cookie-parser');
-const admin = requireFromRoot('firebase-admin');
-const nodemailer = requireFromRoot('nodemailer');
-const { MailerSend, EmailParams, Sender, Recipient } = requireFromRoot('mailersend');
+const express = require('express');
+const session = require('express-session');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const admin = require('firebase-admin');
+const nodemailer = require('nodemailer');
+const { MailerSend, EmailParams, Sender, Recipient } = require('mailersend');
 
 // Import configuration
 const config = require('./config');
@@ -1185,7 +1173,7 @@ app.post('/admin/test-email', requireAuth, async (req, res) => {
             message: 'Test email sent successfully',
             provider: result.provider,
             sentTo: to,
-            previewUrl: usingEthereal && result.data ? requireFromRoot('nodemailer').getTestMessageUrl(result.data) : null,
+            previewUrl: usingEthereal && result.data ? nodemailer.getTestMessageUrl(result.data) : null,
             data: result.data,
             debug: {
                 mailersendConfigured: !!config.MAILERSEND.API_KEY,

@@ -100,7 +100,8 @@ module.exports = async (req, res) => {
                 endpoints: {
                     health: '/health',
                     test: '/test',
-                    track: '/track/:trackingID'
+                    track: '/track/:trackingID',
+                    admin: '/admin/login'
                 }
             });
         }

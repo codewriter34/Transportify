@@ -34,6 +34,7 @@ const Navbar = () => {
             <NavLink to="/features" className={linkClass}>Features</NavLink>
             <NavLink to="/about" className={linkClass}>About</NavLink>
             <NavLink to="/contact" className={linkClass}>Contact</NavLink>
+            <a href="https://transportify-phi.vercel.app/admin/login" className="text-gray-700 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Admin</a>
             <NavLink
               to="/track"
               className="ml-3 bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors duration-200"
@@ -69,6 +70,7 @@ const Navbar = () => {
             <NavLink to="/features" className={mobileLinkClass} onClick={closeMenu}>Features</NavLink>
             <NavLink to="/about" className={mobileLinkClass} onClick={closeMenu}>About</NavLink>
             <NavLink to="/contact" className={mobileLinkClass} onClick={closeMenu}>Contact</NavLink>
+            <a href="https://transportify-phi.vercel.app/admin/login" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-700">Admin</a>
             <NavLink
               to="/track"
               onClick={closeMenu}

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transportify Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
@@ -12,31 +15,41 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
-<body class="bg-gray-50">
-    <!-- Navigation Header -->
-    <nav class="bg-[#1E3A8A] shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <div class="text-2xl font-bold text-white">
-                        🚚 Transportify Admin
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-blue-200">Admin Dashboard</span>
-                    <button id="logoutBtn" class="bg-[#84CC16] hover:bg-[#73B106] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                        Logout
-                    </button>
-                </div>
+<body class="admin-app">
+    <header class="admin-nav">
+        <div class="admin-nav-inner">
+            <a class="admin-brand" href="/admin/dashboard">
+                <span class="admin-mark" aria-hidden="true">T</span>
+                <span class="admin-brand-text">
+                    <strong>Transportify</strong>
+                    <small>Operations</small>
+                </span>
+            </a>
+            <nav class="admin-links" aria-label="Dashboard sections">
+                <a href="https://transportifyy.netlify.app">Public site</a>
+                <a href="#create">New shipment</a>
+                <a href="#overview">Overview</a>
+                <a href="#live-map">Map</a>
+                <a href="#shipments">Shipments</a>
+            </nav>
+            <div class="admin-nav-actions">
+                <span class="admin-user">Signed in</span>
+                <button id="logoutBtn" type="button">Log out</button>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+    <div class="admin-shell">
+        <div class="admin-page-head">
+            <div>
+                <p class="admin-kicker">Dispatch desk</p>
+                <h1>Move a shipment from intake to delivery</h1>
+            </div>
+            <a class="admin-head-link" href="#create">Create shipment</a>
+        </div>
+
         <!-- Add Shipment Form -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div id="create" class="admin-card">
             <h2 class="text-2xl font-bold text-[#1E3A8A] mb-6 flex items-center">
                 <i data-lucide="plus-circle" class="mr-2"></i>
                 Add New Shipment
@@ -311,7 +324,7 @@
         </div>
 
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div id="overview" class="admin-stats">
             <div class="bg-white rounded-lg shadow-lg p-6">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full bg-blue-100 text-[#3B82F6]">
@@ -362,7 +375,7 @@
         </div>
 
         <!-- Shipments Map -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div id="live-map" class="admin-card">
             <h2 class="text-2xl font-bold text-[#1E3A8A] mb-6 flex items-center">
                 <i data-lucide="map" class="mr-2"></i>
                 Shipments Map
@@ -377,7 +390,7 @@
         </div>
 
         <!-- Shipments Table -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
+        <div id="shipments" class="admin-card">
             <h2 class="text-2xl font-bold text-[#1E3A8A] mb-6 flex items-center">
                 <i data-lucide="list" class="mr-2"></i>
                 All Shipments

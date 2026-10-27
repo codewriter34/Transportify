@@ -18,6 +18,7 @@ const Footer = () => {
             <li><Link to="/features" className="hover:text-white">Features</Link></li>
             <li><Link to="/about" className="hover:text-white">About</Link></li>
             <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
+            <li><a href="https://transportify-phi.vercel.app/admin/login" className="hover:text-white">Admin</a></li>
           </ul>
         </div>
         <div>

@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "admin-dashboard/server/server.js",
+      "src": "api/admin.cjs",
       "use": "@vercel/node",
       "config": {
         "includeFiles": "admin-dashboard/public/**"
@@ -24,11 +24,11 @@
   "routes": [
     {
       "src": "/admin",
-      "dest": "/admin-dashboard/server/server.js"
+      "dest": "/api/admin.cjs"
     },
     {
       "src": "/admin/(.*)",
-      "dest": "/admin-dashboard/server/server.js"
+      "dest": "/api/admin.cjs"
     },
     {
       "src": "/basic",

@@ -212,8 +212,8 @@ export default function TrackPage() {
         )}
 
         {result && (
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-8 space-y-6 animate-fade-in-up">
-            <section className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-8 space-y-6">
+            <section className="track-rise bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <img src={logo} alt="" className="h-12 w-12 object-contain" />
@@ -241,7 +241,9 @@ export default function TrackPage() {
                     const reached = stepIndex >= index && stepIndex !== -1;
                     return (
                       <li key={step.key} className="min-w-0">
-                        <div className={`h-1.5 rounded-full mb-2 ${reached ? 'bg-lime-500' : 'bg-gray-200'}`} />
+                        <div className={`h-1.5 rounded-full mb-2 overflow-hidden ${reached ? '' : 'bg-gray-200'}`}>
+                          {reached && <div className="track-fill h-full w-full rounded-full bg-lime-500" style={{ animationDelay: `${index * 80}ms` }} />}
+                        </div>
                         <span className={`text-xs sm:text-sm ${reached ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
                           {step.label}
                         </span>
@@ -253,7 +255,7 @@ export default function TrackPage() {
             </section>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <section className="bg-white rounded-2xl border border-gray-200 p-6">
+              <section className="track-rise track-delay-1 bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Route</h3>
                 <RouteMap
                   origin={result.origin?.coordinates}
@@ -276,14 +278,15 @@ export default function TrackPage() {
                 </dl>
               </section>
 
-              <section className="bg-white rounded-2xl border border-gray-200 p-6">
+              <section className="track-rise track-delay-2 bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Updates</h3>
                 {history.length === 0 ? (
                   <p className="text-gray-600">No updates have been recorded yet.</p>
                 ) : (
                   <ol className="space-y-5">
                     {history.map((entry, index) => (
-                      <li key={`${entry.timestamp || 'update'}-${index}`} className="border-l-2 border-lime-500 pl-4">
+                      <li key={`${entry.timestamp || 'update'}-${index}`} className="relative border-l-2 border-lime-200 pl-4">
+                        <span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-lime-500 ring-4 ring-lime-100" />
                         <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                           <span className="font-medium text-gray-900 capitalize">{(entry.status || 'Update').replace(/-/g, ' ')}</span>
                           <span className="text-sm text-gray-500">{formatDate(entry.timestamp)}</span>
@@ -297,8 +300,8 @@ export default function TrackPage() {
               </section>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <section className="bg-white rounded-2xl border border-gray-200 p-6">
+            <div className={`grid grid-cols-1 gap-6 ${result.bill?.title ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+              <section className="track-rise track-delay-2 bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Package</h3>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
@@ -332,9 +335,9 @@ export default function TrackPage() {
                 </dl>
               </section>
 
-              <section className="bg-white rounded-2xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Bill</h3>
-                {result.bill?.title ? (
+              {result.bill?.title && (
+                <section className="track-rise track-delay-3 rounded-3xl border border-lime-200 bg-lime-50 p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Bill</h3>
                   <dl className="space-y-3 text-sm">
                     <div>
                       <dt className="text-gray-500">Title</dt>
@@ -355,12 +358,10 @@ export default function TrackPage() {
                       <dd className="font-medium text-gray-900">{formatDate(result.bill.sentAt)}</dd>
                     </div>
                   </dl>
-                ) : (
-                  <p className="text-gray-600">No bill has been sent for this shipment.</p>
-                )}
-              </section>
+                </section>
+              )}
 
-              <section className="bg-white rounded-2xl border border-gray-200 p-6">
+              <section className="track-rise track-delay-3 bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Parties</h3>
                 <dl className="space-y-4 text-sm">
                   <div>

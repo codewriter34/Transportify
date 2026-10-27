@@ -1,3 +1,5 @@
+const { toPublicShipment } = require('./publicShipment.cjs');
+
 // Simple Vercel API handler
 console.log('Loading Vercel API...');
 
@@ -206,41 +208,11 @@ module.exports = async (req, res) => {
                 }
                 
                 const doc = snap.docs[0];
-                const data = doc.data();
-                console.log('Shipment found:', data.trackingID);
+                console.log('Shipment found:', doc.data()?.trackingID);
 
-                const toISO = (ts) => {
-                    try {
-                        if (!ts) return null;
-                        if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
-                        if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toISOString();
-                        if (typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toISOString();
-                        const asDate = new Date(ts);
-                        return isNaN(asDate.getTime()) ? null : asDate.toISOString();
-                    } catch (_) { return null; }
-                };
-
-                const normalizedHistory = (data.trackingHistory || []).map((h) => ({
-                    ...h,
-                    timestamp: toISO(h?.timestamp)
-                }));
-
-                return res.json({ 
-                    success: true, 
-                    data: {
-                        id: doc.id,
-                        trackingID: data.trackingID,
-                        status: data.status,
-                        estimatedDeliveryDate: toISO(data.estimatedDeliveryDate),
-                        lastUpdated: toISO(data.lastUpdated),
-                        origin: data.origin || null,
-                        destination: data.destination || null,
-                        sender: data.sender || null,
-                        receiver: data.receiver || null,
-                        package: data.package || null,
-                        currentLocation: data.currentLocation || null,
-                        trackingHistory: normalizedHistory
-                    }
+                return res.json({
+                    success: true,
+                    data: toPublicShipment(doc)
                 });
             } catch (firestoreError) {
                 console.error('Firestore query error:', firestoreError);

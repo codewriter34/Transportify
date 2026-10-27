@@ -17,13 +17,13 @@ const NotFoundPage = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+              className="bg-lime-500 hover:bg-lime-600 text-white px-8 py-3 rounded-lg text-lg font-semibold"
             >
               Go Home
             </Link>
             <button
               onClick={() => window.history.back()}
-              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300"
+              className="border border-gray-300 text-gray-800 hover:bg-gray-50 px-8 py-3 rounded-lg text-lg font-semibold"
             >
               Go Back
             </button>

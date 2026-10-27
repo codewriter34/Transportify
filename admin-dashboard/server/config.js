@@ -44,5 +44,11 @@ module.exports = {
         DOMAIN: process.env.MAILGUN_DOMAIN || '',
         FROM_EMAIL: process.env.MAILGUN_FROM_EMAIL || 'noreply@transportify.com',
         FROM_NAME: process.env.MAILGUN_FROM_NAME || 'Transportify'
+    },
+
+    shipmentTrackUrl(trackingID) {
+        const configured = (process.env.TRACK_BASE_URL || 'https://transportifyy.netlify.app/track').replace(/\/+$/, '');
+        const page = /\/track$/i.test(configured) ? configured : `${configured}/track`;
+        return `${page}?id=${encodeURIComponent(trackingID)}`;
     }
 };

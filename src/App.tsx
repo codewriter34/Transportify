@@ -16,6 +16,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/track" element={<TrackPage />} />
+        <Route path="/track/:trackingId" element={<TrackPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>

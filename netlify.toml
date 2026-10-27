@@ -6,6 +6,17 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[functions]
+  directory = "netlify/functions"
+
+# Tracking API stays on this site. Firebase credentials are read from
+# FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL.
+[[redirects]]
+  from = "/api/track/:id"
+  to = "/.netlify/functions/track/:id"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

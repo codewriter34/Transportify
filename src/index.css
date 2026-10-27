@@ -59,9 +59,43 @@
   animation: float 3s ease-in-out infinite;
 }
 
-/* Smooth scrolling */
+@keyframes kenburns {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+.hero-photo {
+  animation: kenburns 22s ease-out forwards;
+  transform-origin: center;
+}
+
+@keyframes progress-glow {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+.hero-progress {
+  animation: progress-glow 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo,
+  .hero-progress {
+    animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 html {
   scroll-behavior: smooth;
+  font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+
+h1, h2, h3, h4 {
+  font-family: Outfit, "Segoe UI", system-ui, sans-serif;
 }
 
 /* Custom scrollbar */

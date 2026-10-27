@@ -26,6 +26,7 @@ const { MailerSend, EmailParams, Sender, Recipient } = requireFromRoot('mailerse
 
 // Import configuration
 const config = require('./config');
+const { toPublicShipment } = require('../../api/publicShipment.cjs');
 
 // Initialize Firebase Admin
 let firebaseApp;
@@ -64,7 +65,7 @@ try {
     // Continue without Firebase for now
 }
 
-const db = admin.firestore();
+const db = admin.apps.length ? admin.firestore() : null;
 
 // Email transporter (if configured)
 let mailer = null;
@@ -210,7 +211,7 @@ const allowedOrigins = [
     'http://127.0.0.1:3000',
     'http://127.0.0.1:5173',
     'https://transportifyy.netlify.app',
-    'https://transportify-qrem85z84-swankys-projects-4b0bf2b3.vercel.app'
+    'https://transportify-phi.vercel.app'
 ];
 
 const corsGeneral = cors({
@@ -802,7 +803,7 @@ app.post('/admin/api/shipments', requireAuth, async (req, res) => {
 
         // Send notification emails (best effort) - send separate emails to avoid recipient limit
         try {
-            const trackUrl = `${config.EMAIL.TRACK_BASE_URL}/${trackingID}`;
+            const trackUrl = config.shipmentTrackUrl(trackingID);
             const subject = `Shipment Created: ${trackingID}`;
             const body = `Hello,\n\nA new shipment has been created.\n\n` +
                 `Tracking ID: ${trackingID}\n` +
@@ -882,7 +883,7 @@ app.put('/admin/api/shipments/:id', requireAuth, async (req, res) => {
         // Send email notification if status was updated
         if (updateData.status && updatedShipment.receiver?.email) {
             try {
-                const trackUrl = `${config.EMAIL.TRACK_BASE_URL}/${updatedShipment.trackingID}`;
+                const trackUrl = config.shipmentTrackUrl(updatedShipment.trackingID);
                 
                 let subject, body, html;
                 
@@ -1011,6 +1012,125 @@ app.delete('/admin/api/shipments/:id', requireAuth, async (req, res) => {
     }
 });
 
+const BILL_STATUSES = ['pending', 'processing', 'in-transit', 'out-for-delivery', 'delivered', 'on-hold', 'cancelled'];
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function billEmailHtml({ name, title, price, description, status, trackingID, trackUrl }) {
+    return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#111827;line-height:1.5;">
+  <p>Hello ${escapeHtml(name || 'there')},</p>
+  <p>A bill has been issued for your shipment <strong>${escapeHtml(trackingID)}</strong>.</p>
+  <table style="border-collapse:collapse;margin:16px 0;">
+    <tr><td style="padding:6px 16px 6px 0;color:#6b7280;">Title</td><td>${escapeHtml(title)}</td></tr>
+    <tr><td style="padding:6px 16px 6px 0;color:#6b7280;">Amount</td><td><strong>$${escapeHtml(price)}</strong></td></tr>
+    <tr><td style="padding:6px 16px 6px 0;color:#6b7280;">Shipment status</td><td style="text-transform:capitalize;">${escapeHtml(status)}</td></tr>
+  </table>
+  <p>${escapeHtml(description)}</p>
+  <p><a href="${escapeHtml(trackUrl)}">View this shipment</a></p>
+  <p>Transportify</p>
+</body></html>`;
+}
+
+app.post('/admin/api/shipments/:id/bill', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const title = String(req.body?.title || '').trim();
+        const description = String(req.body?.description || '').trim();
+        const status = String(req.body?.status || '').trim().toLowerCase().replace(/\s+/g, '-');
+        const price = Number(req.body?.price);
+
+        if (!title || title.length > 120) {
+            return res.status(400).json({ success: false, message: 'Enter a bill title' });
+        }
+        if (!description || description.length > 2000) {
+            return res.status(400).json({ success: false, message: 'Enter a bill description' });
+        }
+        if (!Number.isFinite(price) || price < 0 || price > 1000000) {
+            return res.status(400).json({ success: false, message: 'Enter a valid price' });
+        }
+        if (!BILL_STATUSES.includes(status)) {
+            return res.status(400).json({ success: false, message: 'Choose a shipment status' });
+        }
+
+        const doc = await db.collection('shipments').doc(id).get();
+        if (!doc.exists) {
+            return res.status(404).json({ success: false, message: 'Shipment not found' });
+        }
+
+        const current = doc.data();
+        const recipient = current.receiver?.email;
+        if (!recipient) {
+            return res.status(400).json({ success: false, message: 'This shipment has no receiver email' });
+        }
+
+        const amount = price.toFixed(2);
+        const sentAt = new Date();
+        const bill = {
+            title,
+            price: Number(amount),
+            description,
+            status,
+            sentTo: recipient,
+            sentAt
+        };
+        const historyEntry = {
+            status,
+            location: current.currentLocation?.name || current.destination?.city || 'Billing',
+            timestamp: sentAt,
+            notes: `Bill sent: ${title} ($${amount})`
+        };
+
+        await updateShipment(id, {
+            status,
+            lastUpdated: sentAt,
+            bills: admin.firestore.FieldValue.arrayUnion(bill),
+            trackingHistory: [...(current.trackingHistory || []), historyEntry]
+        });
+
+        const trackUrl = config.shipmentTrackUrl(current.trackingID);
+        const text = [
+            `Hello ${current.receiver?.name || 'there'},`,
+            '',
+            `A bill has been issued for shipment ${current.trackingID}.`,
+            `Title: ${title}`,
+            `Amount: $${amount}`,
+            `Shipment status: ${status}`,
+            `Description: ${description}`,
+            '',
+            `Track your shipment: ${trackUrl}`,
+            '',
+            'Transportify'
+        ].join('\n');
+
+        await sendEmailUnified({
+            to: [recipient],
+            subject: `Bill for shipment ${current.trackingID}: ${title}`,
+            text,
+            html: billEmailHtml({
+                name: current.receiver?.name,
+                title,
+                price: amount,
+                description,
+                status,
+                trackingID: current.trackingID,
+                trackUrl
+            })
+        });
+
+        res.json({ success: true, message: 'Bill sent', sentTo: recipient });
+    } catch (error) {
+        console.error('Error sending bill:', error);
+        res.status(500).json({ success: false, message: 'The bill could not be sent' });
+    }
+});
+
 // Public tracking lookup (no auth)
 app.get('/track/:trackingID', async (req, res) => {
     try {
@@ -1020,39 +1140,7 @@ app.get('/track/:trackingID', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Tracking ID not found' });
         }
         const doc = snap.docs[0];
-        const data = doc.data();
-
-        // Helper to normalize Firestore Timestamp to ISO string
-        const toISO = (ts) => {
-            try {
-                if (!ts) return null;
-                if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
-                if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toISOString();
-                if (typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toISOString();
-                const asDate = new Date(ts);
-                return isNaN(asDate.getTime()) ? null : asDate.toISOString();
-            } catch (_) { return null; }
-        };
-
-        const normalizedHistory = (data.trackingHistory || []).map((h) => ({
-            ...h,
-            timestamp: toISO(h?.timestamp)
-        }));
-
-        return res.json({ success: true, data: {
-            id: doc.id,
-            trackingID: data.trackingID,
-            status: data.status,
-            estimatedDeliveryDate: toISO(data.estimatedDeliveryDate),
-            lastUpdated: toISO(data.lastUpdated),
-            origin: data.origin || null,
-            destination: data.destination || null,
-            sender: data.sender || null,
-            receiver: data.receiver || null,
-            package: data.package || null,
-            currentLocation: data.currentLocation || null,
-            trackingHistory: normalizedHistory
-        }});
+        return res.json({ success: true, data: toPublicShipment(doc) });
     } catch (error) {
         console.error('Tracking lookup error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -1078,11 +1166,16 @@ app.post('/admin/test-email', requireAuth, async (req, res) => {
         console.log('- From Email:', config.MAILERSEND.FROM_EMAIL);
         console.log('- Client exists:', !!mailerSendClient);
         
+        const requestedTo = String(req.body?.to || '').trim();
+        const to = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requestedTo)
+            ? requestedTo
+            : 'gele9450@gmail.com';
+
         const result = await sendEmailUnified({
-            to: ['gele9450@gmail.com'],
+            to: [to],
             subject: 'Test Email from Transportify',
-            text: 'This is a test email to verify MailerSend is working correctly.',
-            html: '<h2>Test Email</h2><p>This is a test email to verify MailerSend is working correctly.</p>'
+            text: 'This is a test email to verify Transportify mail delivery.',
+            html: '<h2>Test Email</h2><p>This is a test email to verify Transportify mail delivery.</p>'
         });
         
         console.log('Email sent successfully via:', result.provider);
@@ -1091,6 +1184,8 @@ app.post('/admin/test-email', requireAuth, async (req, res) => {
             success: true,
             message: 'Test email sent successfully',
             provider: result.provider,
+            sentTo: to,
+            previewUrl: usingEthereal && result.data ? requireFromRoot('nodemailer').getTestMessageUrl(result.data) : null,
             data: result.data,
             debug: {
                 mailersendConfigured: !!config.MAILERSEND.API_KEY,

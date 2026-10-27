@@ -1,83 +1,60 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import logo from '../assets/transportify-logo.png';
+
+const linkClass = ({ isActive }: { isActive: boolean }) =>
+  `${isActive ? 'text-blue-700 font-semibold' : 'text-gray-700 hover:text-blue-700'} px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200`;
+
+const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `${isActive ? 'text-blue-700 font-semibold bg-blue-50' : 'text-gray-700 hover:text-blue-700'} block px-3 py-2 rounded-md text-base font-medium`;
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const closeMenu = () => setIsMenuOpen(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
+    <nav className={`fixed top-0 z-50 w-full transition-shadow ${scrolled ? 'bg-white/95 shadow-md backdrop-blur' : 'bg-white'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
-            <div className="text-2xl font-bold text-blue-600">
-              🚚 Transportify
-            </div>
+          <NavLink to="/" end onClick={closeMenu} aria-label="Transportify" className="flex items-center">
+            <img src={logo} alt="" className="h-8 w-auto" />
+          </NavLink>
+
+          <div className="hidden md:flex items-center gap-1">
+            <NavLink to="/" end className={linkClass}>Home</NavLink>
+            <NavLink to="/features" className={linkClass}>Features</NavLink>
+            <NavLink to="/about" className={linkClass}>About</NavLink>
+            <NavLink to="/contact" className={linkClass}>Contact</NavLink>
+            <NavLink
+              to="/track"
+              className="ml-3 bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors duration-200"
+            >
+              Track a shipment
+            </NavLink>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              <Link
-                to="/"
-                className="text-gray-900 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Home
-              </Link>
-              <Link
-                to="/features"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Features
-              </Link>
-              <Link
-                to="/about"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                About
-              </Link>
-              <Link
-                to="/contact"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Contact
-              </Link>
-              <button className="bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                Get Started
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
-              onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              type="button"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              aria-expanded={isMenuOpen}
+              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <svg
-                className="h-6 w-6"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 {isMenuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
             </button>
@@ -85,37 +62,20 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
       {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-lg">
-            <Link
-              to="/"
-              className="text-gray-900 block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600"
+        <div className="md:hidden border-t border-gray-100">
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-white">
+            <NavLink to="/" end className={mobileLinkClass} onClick={closeMenu}>Home</NavLink>
+            <NavLink to="/features" className={mobileLinkClass} onClick={closeMenu}>Features</NavLink>
+            <NavLink to="/about" className={mobileLinkClass} onClick={closeMenu}>About</NavLink>
+            <NavLink to="/contact" className={mobileLinkClass} onClick={closeMenu}>Contact</NavLink>
+            <NavLink
+              to="/track"
+              onClick={closeMenu}
+              className="block text-center bg-lime-500 hover:bg-lime-600 text-white px-3 py-2 rounded-md text-base font-semibold"
             >
-              Home
-            </Link>
-            <Link
-              to="/features"
-              className="text-gray-700 block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600"
-            >
-              Features
-            </Link>
-            <Link
-              to="/about"
-              className="text-gray-700 block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600"
-            >
-              About
-            </Link>
-            <Link
-              to="/contact"
-              className="text-gray-700 block px-3 py-2 rounded-md text-base font-medium hover:text-blue-600"
-            >
-              Contact
-            </Link>
-            <button className="w-full text-left bg-lime-500 hover:bg-lime-600 text-white px-3 py-2 rounded-md text-base font-medium">
-              Get Started
-            </button>
+              Track a shipment
+            </NavLink>
           </div>
         </div>
       )}

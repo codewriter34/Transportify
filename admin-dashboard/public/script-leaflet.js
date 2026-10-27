@@ -357,6 +357,10 @@ function updateShipmentsTable() {
                             class="text-green-600 hover:text-green-800" title="Update Location">
                         <i data-lucide="map-pin" class="w-4 h-4"></i>
                     </button>
+                    <button onclick="openBillModal('${shipment.id}')" 
+                            class="text-amber-600 hover:text-amber-800" title="Send bill">
+                        <i data-lucide="receipt" class="w-4 h-4"></i>
+                    </button>
                 </div>
             </td>
         `;
@@ -758,6 +762,70 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+let billShipmentId = null;
+
+function openBillModal(shipmentId) {
+    const shipment = shipments.find((item) => item.id === shipmentId);
+    if (!shipment) return;
+    billShipmentId = shipmentId;
+    document.getElementById('billRecipient').textContent = shipment.receiver?.email
+        ? `This bill is emailed to ${shipment.receiver.email} for ${shipment.trackingID}.`
+        : `${shipment.trackingID} has no receiver email.`;
+    document.getElementById('billStatus').value = (shipment.status || 'pending').toLowerCase().replace(/\s+/g, '-');
+    document.getElementById('billForm').reset();
+    document.getElementById('billStatus').value = (shipment.status || 'pending').toLowerCase().replace(/\s+/g, '-');
+    const modal = document.getElementById('billModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeBillModal() {
+    billShipmentId = null;
+    const modal = document.getElementById('billModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+async function handleBillSubmit(event) {
+    event.preventDefault();
+    if (!billShipmentId) return;
+    const form = event.target;
+    const payload = {
+        title: form.title.value.trim(),
+        price: form.price.value,
+        description: form.description.value.trim(),
+        status: form.status.value
+    };
+    try {
+        const response = await fetch(`/admin/api/shipments/${encodeURIComponent(billShipmentId)}/bill`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (response.status === 401) {
+            window.location.href = '/admin/login';
+            return;
+        }
+        if (!response.ok || !result.success) {
+            alert(result.message || 'The bill could not be sent');
+            return;
+        }
+        closeBillModal();
+        alert(`Bill sent to ${result.sentTo}`);
+        loadShipments();
+    } catch (error) {
+        console.error('Error sending bill:', error);
+        alert('The bill could not be sent');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const billForm = document.getElementById('billForm');
+    if (billForm) billForm.addEventListener('submit', handleBillSubmit);
+});
+
 // Export functions to global scope
 window.adminDashboard = {
     editShipment,
@@ -766,4 +834,6 @@ window.adminDashboard = {
     updateShipmentLocation,
     closeEditModal
 };
+window.openBillModal = openBillModal;
+window.closeBillModal = closeBillModal;
 

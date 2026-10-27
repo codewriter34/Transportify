@@ -854,7 +854,7 @@ app.put('/admin/api/shipments/:id', requireAuth, async (req, res) => {
             const currentData = doc.data();
             const newHistoryEntry = {
                 status: updateData.status,
-                location: updateData.currentLocation || 'Unknown',
+                location: (updateData.currentLocation && updateData.currentLocation.name) || (typeof updateData.currentLocation === 'string' ? updateData.currentLocation : 'Unknown'),
                 timestamp: new Date(),
                 coordinates: updateData.currentCoordinates || null,
                 notes: updateData.notes || `Status changed to ${updateData.status}`

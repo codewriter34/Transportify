@@ -9,7 +9,7 @@ type Coordinates = { lat?: number; lng?: number } | null;
 
 type TrackingHistoryEntry = {
   status?: string;
-  location?: string;
+  location?: string | { name?: string; city?: string } | null;
   timestamp?: string | number | null;
   notes?: string;
 };
@@ -59,6 +59,17 @@ function formatDate(value?: string | number | null): string {
   if (!value) return '—';
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
+}
+
+function locationText(location: unknown): string {
+  if (!location) return 'Location not specified';
+  if (typeof location === 'string') return location.trim() || 'Location not specified';
+  if (typeof location === 'object') {
+    const named = location as { name?: unknown; city?: unknown };
+    if (typeof named.name === 'string' && named.name.trim()) return named.name.trim();
+    if (typeof named.city === 'string' && named.city.trim()) return named.city.trim();
+  }
+  return 'Location not specified';
 }
 
 function formatPlace(place?: { city?: string; state?: string; country?: string } | null): string {
@@ -277,8 +288,8 @@ export default function TrackPage() {
                           <span className="font-medium text-gray-900 capitalize">{(entry.status || 'Update').replace(/-/g, ' ')}</span>
                           <span className="text-sm text-gray-500">{formatDate(entry.timestamp)}</span>
                         </div>
-                        <p className="text-gray-700">{entry.location || 'Location not specified'}</p>
-                        {entry.notes && <p className="text-sm text-gray-600 mt-1">{entry.notes}</p>}
+                        <p className="text-gray-700">{locationText(entry.location)}</p>
+                        {typeof entry.notes === 'string' && entry.notes.trim() && <p className="text-sm text-gray-600 mt-1">{entry.notes}</p>}
                       </li>
                     ))}
                   </ol>

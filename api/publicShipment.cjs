@@ -1,3 +1,13 @@
+function locationText(location) {
+    if (!location) return null;
+    if (typeof location === 'string') return location.trim() || null;
+    if (typeof location === 'object') {
+        if (typeof location.name === 'string' && location.name.trim()) return location.name.trim();
+        if (typeof location.city === 'string' && location.city.trim()) return location.city.trim();
+    }
+    return null;
+}
+
 function toISO(ts) {
     try {
         if (!ts) return null;
@@ -40,7 +50,7 @@ function toPublicShipment(doc) {
     const data = doc.data() || {};
     const normalizedHistory = (data.trackingHistory || []).map((entry) => ({
         status: entry?.status || null,
-        location: entry?.location || null,
+        location: locationText(entry?.location),
         timestamp: toISO(entry?.timestamp),
         notes: entry?.notes || null,
         coordinates: entry?.coordinates || null

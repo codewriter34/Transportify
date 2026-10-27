@@ -1,5 +1,249 @@
 /* Custom CSS for Transportify Admin Dashboard */
 
+body.admin-app,
+body.login-app {
+    margin: 0;
+    background:
+        radial-gradient(900px 420px at 100% -10%, rgba(163, 230, 53, 0.16), transparent 55%),
+        #f4f1ea;
+    color: #1c1917;
+    font-family: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+body.admin-app h1,
+body.admin-app h2,
+body.admin-app h3,
+body.login-app h2,
+.admin-brand strong {
+    font-family: Outfit, "Segoe UI", sans-serif;
+}
+
+.admin-nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: #1c1917;
+    color: #fafaf9;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-nav-inner {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.admin-brand,
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.admin-mark {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.7rem;
+    display: grid;
+    place-items: center;
+    background: #a3e635;
+    color: #1c1917;
+    font-family: Outfit, sans-serif;
+    font-weight: 700;
+}
+
+.admin-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.admin-brand-text strong {
+    font-size: 1.05rem;
+}
+
+.admin-brand-text small,
+.admin-kicker {
+    color: #a8a29e;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-links {
+    display: flex;
+    gap: 0.35rem;
+    margin-left: 0.5rem;
+}
+
+.admin-links a {
+    color: #e7e5e4;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+}
+
+.admin-links a:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.admin-nav-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-user {
+    color: #d6d3d1;
+    font-size: 0.85rem;
+}
+
+#logoutBtn,
+.admin-head-link {
+    border: 0;
+    cursor: pointer;
+    background: #a3e635;
+    color: #1c1917;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.55rem 0.95rem;
+    text-decoration: none;
+}
+
+#logoutBtn:hover,
+.admin-head-link:hover {
+    background: #bef264;
+}
+
+.admin-shell {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 1.75rem 1.25rem 3rem;
+}
+
+.admin-page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-page-head h1 {
+    margin: 0.2rem 0 0;
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    line-height: 1.1;
+    max-width: 16ch;
+}
+
+.admin-card,
+.admin-stats > div {
+    background: #fff;
+    border: 1px solid rgba(28, 25, 23, 0.08);
+    border-radius: 1.25rem;
+    box-shadow: 0 16px 40px rgba(28, 25, 23, 0.05);
+}
+
+.admin-card {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-stats > div {
+    padding: 1.25rem;
+}
+
+body.admin-app input,
+body.admin-app textarea,
+body.admin-app select,
+body.login-app input {
+    border-radius: 0.8rem !important;
+    border-color: #e7e5e4 !important;
+    background: #fff;
+}
+
+body.admin-app table thead {
+    background: #fafaf9;
+}
+
+body.admin-app tbody tr:hover {
+    background: #fafaf9;
+}
+
+.login-app {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+}
+
+.login-wrap {
+    width: min(100%, 28rem);
+}
+
+.login-card {
+    background: #fff;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 24px 60px rgba(28, 25, 23, 0.12);
+}
+
+.login-brand {
+    margin-bottom: 1.75rem;
+}
+
+.login-brand h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #1c1917;
+}
+
+.login-brand p,
+.login-app .text-center p {
+    margin: 0.15rem 0 0;
+    color: #57534e;
+}
+
+@media (max-width: 900px) {
+    .admin-nav-inner,
+    .admin-page-head {
+        flex-wrap: wrap;
+    }
+
+    .admin-links {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        margin-left: 0;
+    }
+
+    .admin-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Corporate Color Palette */
 :root {
     --primary-navy: #1E3A8A;
